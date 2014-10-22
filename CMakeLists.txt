@@ -3,7 +3,7 @@ project(judger)
 if(UNIX)
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -ggdb")
 	set(SRC_LIST 
-		  src/nix/judger.cpp
+		  src/nix/judger.c
 		  )
   set(TEST_LIST
       src/nix/test.cpp

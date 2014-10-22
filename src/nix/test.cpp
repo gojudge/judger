@@ -28,5 +28,10 @@ int main(void){
   s.cha = 'A';
   fwrite(&s, sizeof(s), 1, stream); /* 写的struct文件*/
   fclose(stream); /*关闭文件*/
+
+  for(;;){
+    sleep(1);
+  }
+
   return 0;
 }

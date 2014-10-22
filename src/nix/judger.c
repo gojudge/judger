@@ -19,7 +19,10 @@ int main(int argc, char *argv[])
     struct rusage rinfo;
     int runstat;
 
-    printf("the child pid is %d\n", child);
+    int fd = 0;
+    fd = open("executer.debug", O_WRONLY|O_CREAT);
+
+    dprintf(fd, "the child pid is %d\n", child);
 
     for(;;){
       wait4(child,&runstat,0,&rinfo);
@@ -51,11 +54,12 @@ int main(int argc, char *argv[])
         }
       }
 
-//      orig_eax = ptrace(PTRACE_PEEKUSER, child, 4 * ORIG_EAX, NULL);
-//      printf("The child made a system call %ld\n", orig_eax);
       ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+
+      close(fd);
     }
   }
+
   return 0;
 }
 
