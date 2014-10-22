@@ -14,3 +14,7 @@
 #include <sys/wait.h>
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
+
+int read_config();
+
+

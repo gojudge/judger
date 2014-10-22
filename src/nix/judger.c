@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
 
     dprintf(fd, "the child pid is %d\n", child);
 
+    read_config();
     for(;;){
       wait4(child,&runstat,0,&rinfo);
 
