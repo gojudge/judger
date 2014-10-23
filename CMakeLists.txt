@@ -15,12 +15,12 @@ elseif(WIN32)
 	add_definitions("-D_CRT_SECURE_NO_DEPRECATE" "-D_DEBUG")
 	set(SRC_LIST 
 		  src/win/executer.c
+		  deps/cJSON.c
 		  )
 endif(UNIX)
 
 add_executable(executer ${SRC_LIST})
-add_executable(test ${TEST_LIST})
-#add_executable(mjson ${MJSON_LIST})
+
 if(UNIX)
   target_link_libraries(executer m pthread)
 elseif(WIN32)

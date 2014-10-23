@@ -5,10 +5,8 @@
  * Created Time: 2014年10月21日 星期二 23时05分12秒
  */
 
-#include <iostream>
 #include "stdio.h"
 #include "stdlib.h"
-using namespace std;
 
 struct mystruct
 {
