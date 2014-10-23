@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
+	"github.com/duguying/judger/rex"
 )
 
 func main() {
-	fmt.Println("hello world")
+	judger.Judger()
 }
