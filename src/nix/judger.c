@@ -19,12 +19,22 @@ int main(int argc, char *argv[])
     struct rusage rinfo;
     int runstat;
 
-    int fd = 0;
+    int fd = 0 ,i = 0;
     fd = open("executer.debug", O_WRONLY|O_CREAT);
 
     dprintf(fd, "the child pid is %d\n", child);
 
-    read_config();
+    //read config
+    char* config_string = read_config("executer.json");
+    parse_config_json(config_string);
+    free_config_buffer(config_string);
+
+    printf("time: %d\n", time);
+    printf("memory: %d\n", mem);
+    for(i = 0; i<array_len; i++){
+      printf("forbidden: %d\n", forbidden_syscall[i]);
+    }
+
     for(;;){
       wait4(child,&runstat,0,&rinfo);
 

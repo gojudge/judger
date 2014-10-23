@@ -15,6 +15,12 @@
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
 
-int read_config();
+extern int time;
+extern int mem;
+extern int array_len;
+extern int forbidden_syscall[];
 
+char* read_config(const char* filename);
+void parse_config_json(char* text);
+int free_config_buffer(char* buffer);
 

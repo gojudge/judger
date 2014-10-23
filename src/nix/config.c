@@ -2,88 +2,85 @@
  * File Name: config.c
  * Author: rex
  * Mail: duguying2008@gmail.com 
- * Created Time: 2014年10月22日 星期三 23时51分28秒
+ * Created Time: 2014年10月23日 星期四 11时38分01秒
  */
 
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "cJSON.h"
 
-#include "mjson.h"
+#define LIST_LEN 100
 
-#define MAXCHANNELS 72
-#define BUF_LEN 1024
+int time = 60;
+int mem = 1024;
+int array_len = 0;
+int forbidden_syscall[LIST_LEN];
 
-static int X86_SYSCALL_NUM[MAXCHANNELS];
-static int X64_SYSCALL_NUM[MAXCHANNELS];
-static int visible86,visible64;
-
-static int max_time,max_mem;
-
-const struct json_attr_t json_attrs_sky[] = {
-      {"time",t_integer, .addr.integer = &max_time },
-
-      {"memory",t_integer, .addr.integer = &max_mem },
-
-      {"x86", t_array,   .addr.array.element_type = t_integer,
-                         .addr.array.arr.integers.store = X86_SYSCALL_NUM,
-                         .addr.array.maxlen = MAXCHANNELS,
-                         .addr.array.count = &visible86},
-
-      {"x64", t_array,   .addr.array.element_type = t_integer,
-                         .addr.array.arr.integers.store = X64_SYSCALL_NUM,
-                         .addr.array.maxlen = MAXCHANNELS,
-                         .addr.array.count = &visible64},
-
-      {NULL},
-};
-
-int read_config()
+/* Parse text to JSON, then render back to text, and print! */
+void parse_config_json(char *text)
 {
-      int i, status = 0, len = 0;
-      size_t length = 0;
+  cJSON *root;
+      
+  root=cJSON_Parse(text);
+  if (!root) {
+    printf("Error before: [%s]\n",cJSON_GetErrorPtr());
+  }
+  else
+  {
+    int i = 0;
+    int time_tmp = cJSON_GetObjectItem(root,"time")->valueint;
+    int mem_tmp = cJSON_GetObjectItem(root,"memory")->valueint;
 
-      char buffer[BUF_LEN];
-      FILE* fd;
-      struct stat buf;
-      char* filename = "executer.json";
+    if(time_tmp>=0){
+      time = time_tmp;
+    }
+    if(mem_tmp>=0){
+      mem = mem_tmp;
+    }
 
-      if(stat(filename, &buf)<0)
-      {
-        return -1;
-      }
-      // get length of file
-      length = (unsigned long)buf.st_size;
+    #ifdef __i386__
+    cJSON *list = cJSON_GetObjectItem(root,"x86");
+    #else
+    cJSON *list = cJSON_GetObjectItem(root,"x64");
+    #endif
 
-      if((fd=fopen(filename,"r"))==NULL){
-        printf("open failed!\n");
-        return -1;
-      }
+    array_len = cJSON_GetArraySize(list);
+    for(i=0; i<array_len; i++)
+    {
+      cJSON *item=cJSON_GetArrayItem(list,i);
+      forbidden_syscall[i] = item->valueint;
+    }
 
-      memset(buffer,0,BUF_LEN);
-      len=fread(buffer, length, 1, fd);
+    cJSON_Delete(root);
+  }
+}
 
-      status = json_read_object(buffer, json_attrs_sky, NULL);
+/* read config file */
+char* read_config(const char* filename){
+  int len = 0;
+  char* buffer;
 
-      printf("max time: %d\n", max_time);
+  FILE *f=fopen(filename,"rb");fseek(f,0,SEEK_END);long length=ftell(f);fseek(f,0,SEEK_SET);
 
-      printf("max memory: %d\n", max_mem);
+  if(length <= 0){
+    return (char*)NULL;
+  }
+  buffer = malloc(length + 1);
 
-      printf("%d x86:\n", visible86);
-      for (i = 0; i < visible86; i++)
-        printf("syscall: %d\n", X86_SYSCALL_NUM[i]);
+  memset(buffer,0,length + 1);
+  len=fread(buffer, length, 1, f);
+  fclose(f);
+  if(len == 0){
+    free(buffer);
+    return (char*)NULL;
+  }
+  return buffer;
+}
 
-      printf("%d x64:\n", visible64);
-      for (i = 0; i < visible64; i++)
-        printf("syscall: %d\n", X64_SYSCALL_NUM[i]);
-
-      if (status != 0)
-      puts(json_error_string(status));
-
-      fclose(fd);
-      return 0;
+/* free config string buffer */
+int free_config_buffer(char* buffer){
+  free(buffer);
+  return 0;
 }
 

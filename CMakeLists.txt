@@ -6,7 +6,7 @@ if(UNIX)
 	set(SRC_LIST 
 		  src/nix/judger.c
       src/nix/config.c
-      deps/mjson.c
+      deps/cJSON.c
      )
   set(TEST_LIST
       src/nix/test.cpp
@@ -21,3 +21,7 @@ endif(UNIX)
 add_executable(judger ${SRC_LIST})
 add_executable(test ${TEST_LIST})
 #add_executable(mjson ${MJSON_LIST})
+if(UNIX)
+  target_link_libraries(judger m)
+elseif(WIN32)
+endif(UNIX)
