@@ -15,9 +15,11 @@
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
 #include <signal.h>
+#include <sys/time.h>
+#include <pthread.h>
 
-extern int time;
-extern int mem;
+extern int max_time;
+extern int max_mem;
 extern int array_len;
 extern int forbidden_syscall[];
 

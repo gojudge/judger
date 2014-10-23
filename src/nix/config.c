@@ -12,8 +12,8 @@
 
 #define LIST_LEN 100
 
-int time = 60;
-int mem = 1024;
+int max_time = 60;
+int max_mem = 1024;
 int array_len = 0;
 int forbidden_syscall[LIST_LEN];
 
@@ -33,10 +33,10 @@ void parse_config_json(char *text)
     int mem_tmp = cJSON_GetObjectItem(root,"memory")->valueint;
 
     if(time_tmp>=0){
-      time = time_tmp;
+      max_time = time_tmp;
     }
     if(mem_tmp>=0){
-      mem = mem_tmp;
+      max_mem = mem_tmp;
     }
 
     #ifdef __i386__
