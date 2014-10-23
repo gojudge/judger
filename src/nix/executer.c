@@ -1,4 +1,15 @@
-#include "judger.h"
+#include "executer.h"
+
+/* if the syscall is forbidden, return 0 */
+int check_syscall(int syscall){
+  int i = 0;
+  for(i = 0; i < array_len; i++){
+    if(syscall==forbidden_syscall[i]){
+      return 0; //false, forbidden
+    };
+  }
+  return 1; //true, pass
+}
 
 int main(int argc, char *argv[])
 {
@@ -6,7 +17,7 @@ int main(int argc, char *argv[])
   long orig_eax;
 
   if(argc<2){
-    printf("Usage: judger <command> \n");
+    printf("Usage: judger <command> <args>\n");
     return 0;
   }
 
@@ -29,11 +40,11 @@ int main(int argc, char *argv[])
     parse_config_json(config_string);
     free_config_buffer(config_string);
 
-    printf("time: %d\n", time);
-    printf("memory: %d\n", mem);
-    for(i = 0; i<array_len; i++){
-      printf("forbidden: %d\n", forbidden_syscall[i]);
-    }
+//    printf("time: %d\n", time);
+//    printf("memory: %d\n", mem);
+//    for(i = 0; i<array_len; i++){
+//      printf("forbidden: %d\n", forbidden_syscall[i]);
+//    }
 
     for(;;){
       wait4(child,&runstat,0,&rinfo);
@@ -60,8 +71,14 @@ int main(int argc, char *argv[])
           #else
           syscall = reg.orig_rax;
           #endif
-                      
-          printf("syscall: %d\n",syscall);
+          
+          dprintf(fd, "syscall: %d\n", syscall);
+
+          if(!check_syscall(syscall)){
+            printf("syscall [%d] is forbidden\n", syscall);
+            kill(child,SIGKILL);
+            return -1;
+          }
         }
       }
 

@@ -14,6 +14,7 @@
 #include <sys/wait.h>
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
+#include <signal.h>
 
 extern int time;
 extern int mem;
