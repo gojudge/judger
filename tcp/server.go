@@ -2,14 +2,21 @@ package tcp
 
 import (
 	"fmt"
+	"github.com/duguying/judger/task"
 	"io"
 	"net"
 	"os"
+	"regexp"
+	// "strings"
 	// "time"
 )
 
-const BUFF_SIZE = 10
+const (
+	BUFF_SIZE = 10
+	MARK      = `#`
+)
 
+var frame string
 var buff = make([]byte, BUFF_SIZE)
 
 func handleError(err error) {
@@ -20,6 +27,7 @@ func handleError(err error) {
 }
 
 func handleConnection(tcpConn net.Conn, i int) {
+	frame = ""
 	if tcpConn == nil {
 		return
 	}
@@ -30,11 +38,17 @@ func handleConnection(tcpConn net.Conn, i int) {
 			return
 		}
 		handleError(err)
-		if string(buff[:n]) == "exit" {
-			fmt.Printf("The client:%s has exited\n", tcpConn.RemoteAddr().String())
-		}
 		if n > 0 {
-			fmt.Printf("Read:%s\n", string(buff[:n]))
+			frame = frame + string(buff[:n])
+
+			reg := regexp.MustCompile(MARK)
+			if len(reg.FindAllString(string(buff[:n]), -1)) > 0 {
+				// get the json
+				frame = reg.ReplaceAllString(frame, "")
+				// submit json task
+				task.Run(frame)
+			}
+
 		}
 	}
 }

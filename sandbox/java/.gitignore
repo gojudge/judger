@@ -1,2 +1,6 @@
 # build
 /bin/
+
+# intellij idea
+/.idea/
+*.iml
