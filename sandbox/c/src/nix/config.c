@@ -10,7 +10,7 @@
 #include <string.h>
 #include "cJSON.h"
 
-#define LIST_LEN 100
+#define LIST_LEN 400
 
 int max_time = 60;
 int max_mem = 1024;
