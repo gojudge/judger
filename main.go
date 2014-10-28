@@ -1,8 +1,8 @@
 package main
 
 import (
-	// "fmt"
 	"github.com/duguying/judger/core"
+	_ "github.com/duguying/judger/router"
 )
 
 func main() {

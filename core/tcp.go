@@ -28,6 +28,7 @@ func handleConnection(tcpConn net.Conn, i int) {
 	if tcpConn == nil {
 		return
 	}
+	fmt.Println("Connected! Remote address is " + tcpConn.LocalAddr().String())
 	tcpConn.Write([]byte("Connected! Remote address is " + tcpConn.LocalAddr().String()))
 	for {
 		n, err := tcpConn.Read(buff)

@@ -3,12 +3,11 @@ package judger
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/duguying/judger/controller"
 	"log"
 	"net"
 )
 
-func jsonDecode(data string) (interface{}, error) {
+func JsonDecode(data string) (interface{}, error) {
 	dataByte := []byte(data)
 	var dat interface{}
 
@@ -16,22 +15,22 @@ func jsonDecode(data string) (interface{}, error) {
 	return dat, err
 }
 
-func bind(json interface{}, conn net.Conn) {
-	data := json.(map[string]interface{})
-	actonName := data["action"].(string)
-
-	if "login" == actonName {
-		controller.Login(data, "tcp", conn)
-	}
-}
-
 func Parse(frame string, conn net.Conn) {
 	fmt.Println(frame)
-	json, err := jsonDecode(frame)
+	json, err := JsonDecode(frame)
 	if err != nil {
 		log.Print(err)
 	} else {
-		bind(json, conn)
+		data := json.(map[string]interface{})
+
+		actonName, ok := data["action"].(string)
+		if !ok {
+			fmt.Println("invalid request, action name is not exist.")
+			conn.Write([]byte(("invalid request, action name is not exist.\n")))
+			return
+		}
+
+		RouterMap[actonName].Tcp(data, conn)
 	}
 
 }

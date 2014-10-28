@@ -1,4 +1,10 @@
-### 传输协议
+## judger包(core目录)
+
+judger包是一个简易(tiny)的Service-Router-Controller框架
+
+## 网络通讯
+
+### 传输协议TCP
 
 #### 客户端
 

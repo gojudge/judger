@@ -1,10 +1,6 @@
 package judger
 
-import (
-	"github.com/duguying/judger/compiler"
-)
-
 func Judger() {
+	ConfigInit()
 	TcpStart()
-	compiler.Compile()
 }
