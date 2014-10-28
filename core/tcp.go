@@ -1,14 +1,11 @@
-package tcp
+package judger
 
 import (
 	"fmt"
-	"github.com/duguying/judger/task"
 	"io"
 	"net"
 	"os"
 	"regexp"
-	// "strings"
-	// "time"
 )
 
 const (
@@ -31,6 +28,7 @@ func handleConnection(tcpConn net.Conn, i int) {
 	if tcpConn == nil {
 		return
 	}
+	tcpConn.Write([]byte("Connected! Remote address is " + tcpConn.LocalAddr().String()))
 	for {
 		n, err := tcpConn.Read(buff)
 		if err == io.EOF {
@@ -43,10 +41,14 @@ func handleConnection(tcpConn net.Conn, i int) {
 
 			reg := regexp.MustCompile(MARK)
 			if len(reg.FindAllString(string(buff[:n]), -1)) > 0 {
+				// kick out the comment
+				regFilter := regexp.MustCompile(`//[\d\D][^\r]*\r`)
+				frame = regFilter.ReplaceAllString(frame, "")
 				// get the json
 				frame = reg.ReplaceAllString(frame, "")
 				// submit json task
-				task.Run(frame)
+				Parse(frame, tcpConn)
+				frame = ""
 			}
 
 		}

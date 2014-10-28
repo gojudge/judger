@@ -2,7 +2,7 @@ package main
 
 import (
 	// "fmt"
-	"github.com/duguying/judger/rex"
+	"github.com/duguying/judger/core"
 )
 
 func main() {
