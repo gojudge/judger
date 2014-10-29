@@ -11,10 +11,28 @@ import (
 const (
 	BUFF_SIZE = 10
 	MARK      = `#`
+	MAX_LCI   = 100
 )
 
-var frame string
+type Client struct {
+	active bool
+	conn   net.Conn
+}
+
 var buff = make([]byte, BUFF_SIZE)
+var cliTab = make(map[int]*Client)
+
+/// close client connect from server
+func (this *Client) Close() {
+	this.conn.Close()
+	this.active = false
+}
+
+// send message to client and print in server console
+func (this *Client) Write(str string) {
+	this.conn.Write([]byte(str))
+	fmt.Println(str)
+}
 
 func handleError(err error) {
 	if err != nil {
@@ -23,11 +41,16 @@ func handleError(err error) {
 	}
 }
 
-func handleConnection(tcpConn net.Conn, i int) {
-	frame = ""
+func handleConnection(tcpConn net.Conn, cid int) {
+	frame := ""
+
 	if tcpConn == nil {
 		return
 	}
+
+	cli := &Client{true, tcpConn}
+	cliTab[cid] = cli
+
 	fmt.Println("Connected! Remote address is " + tcpConn.LocalAddr().String())
 	tcpConn.Write([]byte("Connected! Remote address is " + tcpConn.LocalAddr().String()))
 	for {
@@ -48,8 +71,12 @@ func handleConnection(tcpConn net.Conn, i int) {
 				// get the json
 				frame = reg.ReplaceAllString(frame, "")
 				// submit json task
-				Parse(frame, tcpConn)
+				Parse(frame, cli)
 				frame = ""
+				// if connection is inactive[closed by server, jump out of cycle
+				if !cli.active {
+					return
+				}
 			}
 
 		}
@@ -68,6 +95,10 @@ func TcpStart() {
 			continue
 		}
 		i += 1
+		if i > MAX_LCI {
+			fmt.Println("reached max client limit, server stoped.")
+			return
+		}
 		go handleConnection(conn, i)
 	}
 

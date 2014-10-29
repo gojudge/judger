@@ -1,11 +1,11 @@
 package judger
 
 import (
-	"net"
+// "net"
 )
 
 type ControllerInterface interface {
-	Tcp(data map[string]interface{}, conn net.Conn)
+	Tcp(data map[string]interface{}, cli *Client)
 	Http()
 }
 
