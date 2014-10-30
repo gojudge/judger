@@ -3,6 +3,7 @@ package judger
 import (
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"regexp"
@@ -17,6 +18,8 @@ const (
 type Client struct {
 	active bool
 	conn   net.Conn
+	cid    int
+	login  bool
 }
 
 var buff = make([]byte, BUFF_SIZE)
@@ -26,12 +29,39 @@ var cliTab = make(map[int]*Client)
 func (this *Client) Close() {
 	this.conn.Close()
 	this.active = false
+	cliTab[this.cid] = nil
 }
 
 // send message to client and print in server console
 func (this *Client) Write(str string) {
 	this.conn.Write([]byte(str))
 	fmt.Println(str)
+}
+
+// set mark for login
+// value: true for login, false for not login
+func (this *Client) Login(value bool) {
+	this.login = value
+}
+
+func Parse(frame string, cli *Client) {
+	fmt.Println(frame)
+	json, err := JsonDecode(frame)
+	if err != nil {
+		log.Print(err)
+	} else {
+		data := json.(map[string]interface{})
+
+		actonName, ok := data["action"].(string)
+		if !ok {
+			fmt.Println("invalid request, action name is not exist.")
+			cli.conn.Write([]byte(("invalid request, action name is not exist.\n")))
+			return
+		}
+
+		RouterMap[actonName].Tcp(data, cli)
+	}
+
 }
 
 func handleError(err error) {
@@ -48,7 +78,7 @@ func handleConnection(tcpConn net.Conn, cid int) {
 		return
 	}
 
-	cli := &Client{true, tcpConn}
+	cli := &Client{true, tcpConn, cid, false}
 	cliTab[cid] = cli
 
 	fmt.Println("Connected! Remote address is " + tcpConn.LocalAddr().String())
