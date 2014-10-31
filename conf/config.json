@@ -1,3 +1,5 @@
 {
-	"password":		"123456789"
+	"password":		"123456789",
+	"buildpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\build",
+	"compilerpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\script\\cl.bat"
 }
