@@ -54,9 +54,16 @@ func Parse(frame string, cli *Client) {
 
 		actonName, ok := data["action"].(string)
 		if !ok {
-			fmt.Println("invalid request, action name is not exist.")
-			cli.conn.Write([]byte(("invalid request, action name is not exist.\n")))
+			cli.Write("invalid request, action name is not exist.")
 			return
+		}
+
+		// 如果不是登录请求，并且用户处于未登录状态，禁止通行
+		if actonName != "login" {
+			if !cli.login {
+				cli.Write("you have not login.")
+				return
+			}
 		}
 
 		RouterMap[actonName].Tcp(data, cli)

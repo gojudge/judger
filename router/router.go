@@ -7,4 +7,5 @@ import (
 
 func init() {
 	judger.Router("login", &controller.LoginController{})
+	judger.Router("task_add", &controller.TaskAddController{})
 }

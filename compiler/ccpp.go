@@ -11,7 +11,7 @@ var buildPath string
 var compilerPath string
 
 func Compile(code string, language string, id int, host string) {
-	judger.ConfigInit()
+	//judger.ConfigInit()
 	var ok bool
 	buildPathObj := judger.Config("buildpath")
 	buildPath, ok = buildPathObj.(string)

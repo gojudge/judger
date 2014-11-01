@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/duguying/judger/core"
 	// "net"
+	"github.com/duguying/judger/compiler"
 	"runtime"
 )
 
+// login controller
 type LoginController struct {
 	judger.ControllerInterface
 }
@@ -56,4 +58,37 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *judger.Client
 		cli.Close()
 	}
 
+}
+
+// add task controller
+type TaskAddController struct {
+	judger.ControllerInterface
+}
+
+func (this *TaskAddController) Tcp(data map[string]interface{}, cli *judger.Client) {
+
+	var ok bool
+	var id float64
+	var language string
+	var code string
+
+	id, ok = data["id"].(float64)
+	if !ok {
+		cli.Write("invalid id")
+		return
+	}
+
+	language, ok = data["language"].(string)
+	if !ok {
+		cli.Write("invalid language name, should be string")
+		return
+	}
+
+	code, ok = data["code"].(string)
+	if !ok {
+		cli.Write("invalid code, should be string")
+		return
+	}
+
+	compiler.Compile(code, language, int(id), "127.0.0.1#5234")
 }
