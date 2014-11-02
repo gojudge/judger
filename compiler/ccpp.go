@@ -9,13 +9,14 @@ import (
 
 var buildPath string
 var compilerPath string
+var DSM string // dir split mark
 
 func Compile(code string, language string, id int, host string) {
 	//judger.ConfigInit()
 	var ok bool
 	buildPathObj := judger.Config("buildpath")
 	buildPath, ok = buildPathObj.(string)
-	if !ok {
+  if !ok {
 		fmt.Println("`buildpath` is error in config.json")
 	}
 
@@ -24,6 +25,12 @@ func Compile(code string, language string, id int, host string) {
 	if !ok {
 		fmt.Println("`compilerpath` is error in config.json")
 	}
+
+  if "windows" == runtime.GOOS {
+    DSM = `\`
+  }else{
+    DSM = `/`
+  }
 
 	err := createDirs(id, host)
 	if err != nil {
@@ -40,7 +47,7 @@ func Compile(code string, language string, id int, host string) {
 	if "windows" == runtime.GOOS {
 		cl(id, host)
 	} else {
-		gcc()
+		gcc(id, host)
 	}
 }
 
@@ -48,11 +55,11 @@ func Compile(code string, language string, id int, host string) {
 func createDirs(id int, host string) error {
 	var err error
 	err = nil
-	userBuildPath := buildPath + `\` + host
+	userBuildPath := buildPath + DSM + host
 	if !judger.PathExist(userBuildPath) {
 		err = judger.Mkdir(userBuildPath)
 	}
-	itemBuildPath := userBuildPath + `\` + fmt.Sprintf("%d", id)
+	itemBuildPath := userBuildPath + DSM + fmt.Sprintf("%d", id)
 	if !judger.PathExist(itemBuildPath) {
 		err = judger.Mkdir(itemBuildPath)
 	}
@@ -65,13 +72,13 @@ func writeCode(code string, id int, host string, language string) error {
 	if language == "C" {
 		lang = "c"
 	}
-	path := buildPath + `\` + host + `\` + fmt.Sprintf("%d\\%d.%s", id, id, lang)
+	path := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.%s", id, DSM, id, lang)
 	return judger.WriteFile(path, code)
 }
 
 // call cl compiler in windows
 func cl(id int, host string) {
-	codeFile := buildPath + `\` + host + `\` + fmt.Sprintf("%d\\%d.c", id, id)
+	codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.c", id, DSM, id)
 
 	cmd := exec.Command("cmd", "/K",
 		compilerPath,
@@ -88,6 +95,24 @@ func cl(id int, host string) {
 }
 
 // call gcc compiler in other os
-func gcc() {
+func gcc(id int, host string) {
+  codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d/%d.c", id, id)
 
+	cmd := exec.Command("sh",
+		compilerPath,
+		codeFile,
+    fmt.Sprintf("%s/%s/%d", buildPath, host, id),
+	)
+
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println("失败")
+		fmt.Println(err)
+	}
+	fmt.Println(string(output))
+
+}
+
+// call g++ compiler
+func gpp(id int, host string) {
 }
