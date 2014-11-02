@@ -33,7 +33,7 @@ judger包是一个简易(tiny)的Service-Router-Controller框架
 	"id":		12,					//task id, task id must be unique
 	"time":		123456789,			//timestamp
 	"language":	"C",				//language
-	"code":		"here is code"		//code
+	"code":		"here is code"		//code，code应该是经过html转义的
 }
 ```
 

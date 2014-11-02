@@ -17,7 +17,7 @@ const (
 
 type Client struct {
 	active bool
-	conn   net.Conn
+	Conn   net.Conn
 	cid    int
 	login  bool
 }
@@ -27,14 +27,14 @@ var cliTab = make(map[int]*Client)
 
 /// close client connect from server
 func (this *Client) Close() {
-	this.conn.Close()
+	this.Conn.Close()
 	this.active = false
 	cliTab[this.cid] = nil
 }
 
 // send message to client and print in server console
 func (this *Client) Write(str string) {
-	this.conn.Write([]byte(str))
+	this.Conn.Write([]byte(str))
 	fmt.Println(str)
 }
 
@@ -71,10 +71,12 @@ func Parse(frame string, cli *Client) {
 
 }
 
-func handleError(err error) {
+func handleError(err error, tcpConn net.Conn) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Fatal error: %s", err.Error())
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "Client error: %s", err.Error())
+		if tcpConn != nil {
+			tcpConn.Close()
+		}
 	}
 }
 
@@ -96,7 +98,7 @@ func handleConnection(tcpConn net.Conn, cid int) {
 			fmt.Printf("The RemoteAddr:%s is closed!\n", tcpConn.RemoteAddr().String())
 			return
 		}
-		handleError(err)
+		handleError(err, tcpConn)
 		if n > 0 {
 			frame = frame + string(buff[:n])
 
@@ -123,7 +125,7 @@ func handleConnection(tcpConn net.Conn, cid int) {
 func TcpStart() {
 	i := 0
 	ln, err := net.Listen("tcp", ":1004")
-	handleError(err)
+	handleError(err, nil)
 
 	for {
 		conn, err := ln.Accept()

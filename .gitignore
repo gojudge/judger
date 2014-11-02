@@ -7,3 +7,6 @@
 # go build
 /judger
 *.exe
+
+# tools
+/tools/

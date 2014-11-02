@@ -5,6 +5,8 @@ import (
 	"github.com/duguying/judger/core"
 	// "net"
 	"github.com/duguying/judger/compiler"
+	"html"
+	"regexp"
 	"runtime"
 )
 
@@ -89,6 +91,13 @@ func (this *TaskAddController) Tcp(data map[string]interface{}, cli *judger.Clie
 		cli.Write("invalid code, should be string")
 		return
 	}
+	// HTML反转义
+	code = html.UnescapeString(code)
 
-	compiler.Compile(code, language, int(id), "127.0.0.1#5234")
+	// get the host
+	host := cli.Conn.RemoteAddr().String()
+	reg := regexp.MustCompile(`:`)
+	host = reg.ReplaceAllString(host, "#")
+
+	compiler.Compile(code, language, int(id), host)
 }

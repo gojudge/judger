@@ -1,5 +1,10 @@
 {
 	"password":		"123456789",
 	"buildpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\build",
-	"compilerpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\script\\cl.bat"
+	"compilerpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\script\\cl.bat",
+	"language":		{
+		"C":	{"postfix":"c","compiler":"vc6"},
+		"C++":	{"postfix":"cpp","compiler":"vc6"},
+		"Java":	{"postfix":"java","compiler":"javac"}
+	}
 }
