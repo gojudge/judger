@@ -12,25 +12,31 @@ var compilerPath string
 var DSM string // dir split mark
 
 func Compile(code string, language string, id int, host string) {
-	//judger.ConfigInit()
 	var ok bool
+	var compilers map[string]interface{}
+
 	buildPathObj := judger.Config("buildpath")
 	buildPath, ok = buildPathObj.(string)
-  if !ok {
+	if !ok {
 		fmt.Println("`buildpath` is error in config.json")
 	}
 
 	compilerPathObj := judger.Config("compilerpath")
-	compilerPath, ok = compilerPathObj.(string)
 	if !ok {
 		fmt.Println("`compilerpath` is error in config.json")
 	}
 
-  if "windows" == runtime.GOOS {
-    DSM = `\`
-  }else{
-    DSM = `/`
-  }
+	compilers, ok = compilerPathObj.(map[string]interface{})
+	compilerPath, ok = compilers[language].(string)
+	if !ok {
+		fmt.Println("`compilerpath` is error in config.json")
+	}
+
+	if "windows" == runtime.GOOS {
+		DSM = `\`
+	} else {
+		DSM = `/`
+	}
 
 	err := createDirs(id, host)
 	if err != nil {
@@ -96,12 +102,12 @@ func cl(id int, host string) {
 
 // call gcc compiler in other os
 func gcc(id int, host string) {
-  codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d/%d.c", id, id)
+	codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d/%d.c", id, id)
 
 	cmd := exec.Command("sh",
 		compilerPath,
 		codeFile,
-    fmt.Sprintf("%s/%s/%d", buildPath, host, id),
+		fmt.Sprintf("%s/%s/%d", buildPath, host, id),
 	)
 
 	output, err := cmd.Output()

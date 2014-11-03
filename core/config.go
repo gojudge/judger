@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 )
 
 var configData interface{}
@@ -23,6 +24,9 @@ func readFile(path string) string {
 func ConfigInit() {
 	var err error
 	configString := readFile("conf/config.json")
+	// kick out the comment
+	regFilter := regexp.MustCompile(`//[\d\D][^\r]*\r`)
+	configString = regFilter.ReplaceAllString(configString, "")
 	configData, err = JsonDecode(configString)
 	if err != nil {
 		log.Fatalln("Read config file failed. please check `conf/config.json`.")

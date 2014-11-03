@@ -7,6 +7,6 @@
 #!/bin/bash
 
 cd $2
-gcc $1
+gcc $1 > BUILD.LOG
 echo $? > BUILDRESULT
 

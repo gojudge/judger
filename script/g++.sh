@@ -7,7 +7,6 @@
 #!/bin/bash
 
 cd $2
-g++ $1
-
+g++ $1 > BUILD.LOG
 echo $? > BUILDRESULT
 

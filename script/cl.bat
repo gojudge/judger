@@ -7,6 +7,6 @@
 chcp 65001
 call "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" x86
 cd %2
-cl %1
+cl %1 > BUILD.LOG
 
-echo %ERRORLEVEL% > ERRORLEVEL
+echo %ERRORLEVEL% > BUILDRESULT
