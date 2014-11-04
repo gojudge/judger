@@ -31,14 +31,15 @@ int main(int argc, char *argv[])
   long orig_eax;
 
   if(argc<2){
-    printf("Usage: judger <command> <args>\n");
+    printf("Usage: executer <command> <args>\n");
     return 0;
   }
 
   child = fork();
   if(child == 0) {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-    execvp(argv[1], argv+1);
+    // must use execl for supporting segmentfault check
+    execl(argv[1], argv[1]);
     exit(0);
   }else{
     struct rusage rinfo;
@@ -67,15 +68,29 @@ int main(int argc, char *argv[])
 
       if (WIFEXITED(runstat))
       {
+        int exitcode = WEXITSTATUS(runstat);
+        dprintf(fd, "exitcode [%d]\n", exitcode);
+        if (exitcode != 0)
+        {
+          //Runtime Error
+          printf("Runtime Error\n");
+          exit(-exitcode);
+        }
+        //normal exit
+        dprintf(fd, "Exit Normally.\n");
         exit(0);
       }
       else if (WIFSIGNALED(runstat))
       {
-        //result(RS_ECR,SIGKILL);
+        printf("[WIFSIGNALED] Executer Error.\n");
+        exit(-1);
       }
       else if (WIFSTOPPED(runstat))
       {
-        if (WSTOPSIG(runstat) == SIGTRAP){
+        int signal = WSTOPSIG(runstat);
+        dprintf(fd, "WIFSTOPPED>signal: %d\n", signal);
+
+        if (signal == SIGTRAP){
           struct user_regs_struct reg;
           int syscall;
           static int executed = 0;
@@ -91,11 +106,27 @@ int main(int argc, char *argv[])
 
           // syscall check 
           if(!check_syscall(syscall)){
-            printf("syscall [%d] is forbidden\n", syscall);
+            dprintf(fd, "[WIFSTOPPED>SIGTRAP] Syscall [%d] is Forbidden.\n", syscall);
+            printf("Syscall [%d] is Forbidden.\n", syscall);
+
             kill(child,SIGKILL);
             return -1;
           }
+          
+        }else if(signal == SIGUSR1){
+          // Ignore
+        }else if(signal == SIGXFSZ){
+          dprintf(fd, "[WIFSTOPPED>SIGXFSZ] Output Limit Exceed.\n");
+          printf("Output Limit Exceed.\n");
+
+          exit(-1);
+        }else{
+          dprintf(fd, "[WIFSTOPPED>SIGXFSZ] Runtime Error.\n");
+          printf("Runtime Error.\n");
+
+          exit(-1);
         }
+
       }
 
       ptrace(PTRACE_SYSCALL, child, NULL, NULL);
