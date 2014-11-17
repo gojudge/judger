@@ -19,7 +19,7 @@ void* time_watcher(void* unused){
   while (1){
     time_t now_time = time(NULL);
     if(now_time > begin_time + max_time){
-      printf("over time [%d], killed!\n", now_time);
+      printf("over time [%d], killed!\n", (int)now_time);
       kill(child,SIGKILL);
       exit(-1);
     }
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
   if(child == 0) {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // must use execl for supporting segmentfault check
-    execl(argv[1], argv[1]);
+    execl(argv[1], argv[1], (char*)NULL);
     exit(0);
   }else{
     struct rusage rinfo;
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
     dprintf(fd, "the child pid is %d\n", child);
 
     begin_time = time(NULL);
-    dprintf(fd, "begin time [%d]\n", begin_time);
+    dprintf(fd, "begin time [%d]\n", (int)begin_time);
 
     //read config
     char* config_string = read_config("executer.json");
