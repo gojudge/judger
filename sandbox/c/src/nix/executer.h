@@ -21,7 +21,7 @@
 extern int max_time;
 extern int max_mem;
 extern int array_len;
-extern int forbidden_syscall[];
+extern int allow_syscall[];
 
 char* read_config(const char* filename);
 void parse_config_json(char* text);

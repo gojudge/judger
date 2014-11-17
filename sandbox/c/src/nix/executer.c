@@ -7,11 +7,11 @@ time_t begin_time;
 int check_syscall(int syscall){
   int i = 0;
   for(i = 0; i < array_len; i++){
-    if(syscall==forbidden_syscall[i]){
-      return 0; //false, forbidden
+    if(syscall==allow_syscall[i]){
+      return 1; //true, the syscall matched one of the list, pass
     };
   }
-  return 1; //true, pass
+  return 0; //false, not matched
 }
 
 /* timer, when over time, killed son and program exit */

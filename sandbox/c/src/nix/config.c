@@ -15,7 +15,7 @@
 int max_time = 60;
 int max_mem = 1024;
 int array_len = 0;
-int forbidden_syscall[LIST_LEN];
+int allow_syscall[LIST_LEN];
 
 /* Parse text to JSON, then render back to text, and print! */
 void parse_config_json(char *text)
@@ -49,7 +49,7 @@ void parse_config_json(char *text)
     for(i=0; i<array_len; i++)
     {
       cJSON *item=cJSON_GetArrayItem(list,i);
-      forbidden_syscall[i] = item->valueint;
+      allow_syscall[i] = item->valueint;
     }
 
     cJSON_Delete(root);
