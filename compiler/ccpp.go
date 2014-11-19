@@ -87,9 +87,9 @@ func cl(id int, host string) {
 	codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.c", id, DSM, id)
 
 	cmd := exec.Command("cmd", "/K",
-		compilerPath,
-		codeFile,
-		fmt.Sprintf("%s\\%s\\%d", buildPath, host, id),
+		compilerPath, // path of compiler script
+		codeFile,     // code file path
+		fmt.Sprintf("%s\\%s\\%d", buildPath, host, id), // compiling directory
 	)
 
 	output, err := cmd.Output()
