@@ -1,7 +1,11 @@
 #include "executer.h"
 
+#define VERSION "1.0.1"
+
 pid_t child;
 time_t begin_time;
+char* executable = NULL;
+int fd = 0;
 
 /* if the syscall is forbidden, return 0 */
 int check_syscall(int syscall){
@@ -26,33 +30,96 @@ void* time_watcher(void* unused){
   }
 }
 
+/* parse command args */
+void parse_args(int argc, char *argv[]){
+  int i = 0;
+  char* arg = NULL;
+  char* buff = NULL;
+  const int BUF_LEN = 128;
+  char* tag_name = NULL;
+  char* tag_value = NULL;
+
+  buff = (char*)malloc(sizeof(BUF_LEN));
+
+  for(i = 1; i < argc; i++){
+    memset(buff, 0, sizeof(BUF_LEN));
+    strncpy(buff, argv[i], strlen(argv[i])+1);
+
+    if(buff[0] == '-'){               // options
+      tag_name = strtok(buff+1, "="); // string time
+      tag_value = strtok(NULL, "=");  // decemal time value
+
+      if(!strcmp(tag_name, "t")){     // time
+        int tmp_time = atoi(tag_value);
+        if(tmp_time > 0){
+          max_time = tmp_time;
+        }else{
+          dprintf(fd, "invalid time [%d], use default.\n", tmp_time);
+        }
+      }else if(!strcmp(tag_name, "m")){  // memory
+        int tmp_mem = atoi(tag_value);
+        if(tmp_mem > 0){
+          max_mem = tmp_mem;
+        }else{
+          dprintf(fd, "invalid memory [%d], use default.\n", tmp_mem);
+        }
+      }
+
+    }else{ // executable path, just one
+      strncpy(executable, argv[i], strlen(argv[i]));
+    }
+
+  }
+
+  return;
+}
+
 int main(int argc, char *argv[])
 {
   long orig_eax;
+  int EXE_LEN = 1024;
+
+  // alloc memory for path string
+  executable = (char*)malloc(sizeof(EXE_LEN)); 
+  memset(executable, 0, sizeof(EXE_LEN));
 
   if(argc<2){
-    printf("Usage: executer <command> <args>\n");
+    printf(
+        "\033[0;39;1mSandbox for Linux Native\033[0m\n"
+        "Usage: executer <option> <command>\n"
+        "option:\n"
+        "  \033[0;33m-t=time\033[0m     program max time\n"
+        "  \033[0;33m-m=mem\033[0m      program max memory\n"
+        "\033[0;32mversion "
+        VERSION
+        "\033[0m\n"
+        );
     return 0;
+  }else{
+    parse_args(argc, argv);
   }
 
   child = fork();
   if(child == 0) {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // must use execl for supporting segmentfault check
-    execl(argv[1], argv[1], (char*)NULL);
+    execl(executable, executable, (char*)NULL);
     exit(0);
   }else{
     struct rusage rinfo;
-    int runstat;
+    int runstat, i=0;
     pthread_t thread_id;
 
-    int fd = 0 ,i = 0;
+    fd = 0;
     fd = open("executer.debug", O_WRONLY|O_CREAT);
 
     dprintf(fd, "the child pid is %d\n", child);
 
     begin_time = time(NULL);
     dprintf(fd, "begin time [%d]\n", (int)begin_time);
+    dprintf(fd, "max_time [%d]\nmax_mem [%d]\nexecutable path [%s]\n", 
+        max_time, max_mem, executable
+    );
 
     //read config
     char* config_string = read_config("executer.json");
@@ -88,7 +155,6 @@ int main(int argc, char *argv[])
       else if (WIFSTOPPED(runstat))
       {
         int signal = WSTOPSIG(runstat);
-        dprintf(fd, "WIFSTOPPED>signal: %d\n", signal);
 
         if (signal == SIGTRAP){
           struct user_regs_struct reg;

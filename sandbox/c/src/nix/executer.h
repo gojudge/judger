@@ -18,10 +18,13 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-extern int max_time;
-extern int max_mem;
-extern int array_len;
-extern int allow_syscall[];
+extern int max_time;         // max time
+extern int max_mem;          // max memory
+extern int array_len;        // syscall list length
+extern int allow_syscall[];  // allow syscall list
+extern int fd;               // debug log file
+extern char* executable;     // executable path
+extern int EXE_LEN;          // executable path length
 
 char* read_config(const char* filename);
 void parse_config_json(char* text);
