@@ -3,9 +3,32 @@
 #define VERSION "1.0.1"
 
 pid_t child;
-time_t begin_time;
+long begin_time;
 char* executable = NULL;
 int fd = 0;
+
+/* print error */
+//void PRTERR(){
+//  extern int errno;
+//  char* message;
+//  
+//  printf("errno [%d]\n", errno);
+//  message = strerror(errno);
+//  printf("Mesg: %s\n", message);
+//}
+
+/* now, get now time of microsecond */
+long t_now(){
+  long tmp_now = 0;
+  struct timeval tv;
+
+  memset(&tv, 0, sizeof(struct timeval));
+  gettimeofday(&tv, NULL);
+
+  tmp_now = (long)tv.tv_sec * 1000 + (long)tv.tv_usec / 1000;
+
+  return tmp_now;
+}
 
 /* if the syscall is forbidden, return 0 */
 int check_syscall(int syscall){
@@ -21,9 +44,9 @@ int check_syscall(int syscall){
 /* timer, when over time, killed son and program exit */
 void* time_watcher(void* unused){
   while (1){
-    time_t now_time = time(NULL);
-    if(now_time > begin_time + max_time){
-      printf("over time [%d], killed!\n", (int)now_time);
+    long now_time = t_now();
+    if(now_time - begin_time - (long)max_time > 0){
+      printf("over time [%lu], killed!\n", now_time);
       kill(child,SIGKILL);
       exit(-1);
     }
@@ -115,9 +138,9 @@ int main(int argc, char *argv[])
 
     dprintf(fd, "the child pid is %d\n", child);
 
-    begin_time = time(NULL);
-    dprintf(fd, "begin time [%d]\n", (int)begin_time);
-    dprintf(fd, "max_time [%d]\nmax_mem [%d]\nexecutable path [%s]\n", 
+    begin_time = t_now();
+    dprintf(fd, "begin time [%lu]\n", begin_time);
+    dprintf(fd, "max_time [%lu]\nmax_mem [%d]\nexecutable path [%s]\n", 
         max_time, max_mem, executable
     );
 
@@ -130,7 +153,7 @@ int main(int argc, char *argv[])
     pthread_create (&thread_id, NULL, &time_watcher, NULL);
 
     for(;;){
-      time_t now_time;
+      //time_t now_time;
       wait4(child,&runstat,0,&rinfo);
 
       if (WIFEXITED(runstat))
@@ -149,7 +172,8 @@ int main(int argc, char *argv[])
       }
       else if (WIFSIGNALED(runstat))
       {
-        printf("[WIFSIGNALED] Executer Error.\n");
+        // call kill(pid, SIGKILL)
+        // Ignore
         exit(-1);
       }
       else if (WIFSTOPPED(runstat))

@@ -1,5 +1,6 @@
 project(executer)
 
+set(CMAKE_BUILD_TYPE "Debug")
 include_directories("deps")
 if(UNIX)
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -ggdb")

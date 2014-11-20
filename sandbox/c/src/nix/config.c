@@ -12,7 +12,7 @@
 
 #define LIST_LEN 400
 
-int max_time = 60;
+long max_time = 6000;
 int max_mem = 1024;
 int array_len = 0;
 int allow_syscall[LIST_LEN];
@@ -33,7 +33,7 @@ void parse_config_json(char *text)
     int mem_tmp = cJSON_GetObjectItem(root,"memory")->valueint;
 
     if(time_tmp>=0){
-      max_time = time_tmp;
+      max_time = (long int)time_tmp;
     }
     if(mem_tmp>=0){
       max_mem = mem_tmp;

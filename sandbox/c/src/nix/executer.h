@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+//#include <errno.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,7 +19,7 @@
 #include <sys/time.h>
 #include <pthread.h>
 
-extern int max_time;         // max time
+extern long max_time;         // max time
 extern int max_mem;          // max memory
 extern int array_len;        // syscall list length
 extern int allow_syscall[];  // allow syscall list
