@@ -86,6 +86,7 @@ void* time_watcher(void* unused){
       dprintf(fd, "over time [%lu], killed!\n", now_time);
       pexit(POT);
     }
+    sleep(0);
   }
 }
 
@@ -157,6 +158,14 @@ int main(int argc, char *argv[])
         );
     return 0;
   }else{
+    fd = 0;
+    fd = open("executer.debug", O_WRONLY|O_CREAT);
+
+    //read config
+    char* config_string = read_config("executer.json");
+    parse_config_json(config_string);
+    free_config_buffer(config_string);
+
     parse_args(argc, argv);
   }
 
@@ -164,16 +173,12 @@ int main(int argc, char *argv[])
   if(child == 0) {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // must use execl for supporting segmentfault check
-    //printf("exe [%s]\n", executable);
     execl(executable, "", (char*)NULL);
     exit(0);
   }else{
     struct rusage rinfo;
     int runstat, i=0;
     pthread_t thread_id;
-
-    fd = 0;
-    fd = open("executer.debug", O_WRONLY|O_CREAT);
 
     dprintf(fd, "the child pid is %d\n", child);
 
@@ -182,11 +187,6 @@ int main(int argc, char *argv[])
     dprintf(fd, "max_time [%lu]\nmax_mem [%d]\nexecutable path [%s]\n", 
         max_time, max_mem, executable
     );
-
-    //read config
-    char* config_string = read_config("executer.json");
-    parse_config_json(config_string);
-    free_config_buffer(config_string);
 
     // a new thread for timer, when over time, killed and exit
     pthread_create (&thread_id, NULL, &time_watcher, NULL);
@@ -258,8 +258,6 @@ int main(int argc, char *argv[])
 
     }
     
-    //close(fd);
-
   }
 
   return 0;
