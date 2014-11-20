@@ -1,21 +1,32 @@
 #include "executer.h"
+#include <errno.h>
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 pid_t child;
 long begin_time;
 char* executable = NULL;
+int EXE_LEN = 1024;
 int fd = 0;
 
+enum ecode{
+  PEN,      // Exit Normally
+  PRE,      // Runtime Error
+  POM,      // Out of Memory
+  POT,      // Out of Time
+  POL,      // Output Limit Exceed
+  PSF       // Syscall Forbidden
+};
+
 /* print error */
-//void PRTERR(){
-//  extern int errno;
-//  char* message;
-//  
-//  printf("errno [%d]\n", errno);
-//  message = strerror(errno);
-//  printf("Mesg: %s\n", message);
-//}
+void PRTERR(){
+  extern int errno;
+  char* message;
+  
+  printf("errno [%d]\n", errno);
+  message = strerror(errno);
+  printf("Mesg: %s\n", message);
+}
 
 /* now, get now time of microsecond */
 long t_now(){
@@ -30,6 +41,32 @@ long t_now(){
   return tmp_now;
 }
 
+/* process exit */
+void pexit(enum ecode EC){
+  if(EC == PEN){
+    // Ignore
+  }else if(EC == POT){
+    printf("Out of Time.\n");
+    kill(child,SIGKILL);
+  }else if(EC == PSF){
+    printf("Syscall Forbidden.\n");
+    kill(child,SIGKILL);
+  }else if(EC == POM){
+    printf("Out of Memory.\n");
+    kill(child,SIGKILL);
+  }else if(EC == PRE){
+    printf("Runtime Error.\n");
+  }else if(EC == POL){
+    printf("Output Limit Exceed.\n");
+    kill(child,SIGKILL);
+  }else{
+    dprintf(fd, "EC [%d]\n", EC);
+  }
+
+  close(fd);
+  exit(0);
+}
+
 /* if the syscall is forbidden, return 0 */
 int check_syscall(int syscall){
   int i = 0;
@@ -41,15 +78,33 @@ int check_syscall(int syscall){
   return 0; //false, not matched
 }
 
+/* get memory used */
+int get_memory_used(int pid){
+  FILE *fps;
+  char ps[32];
+  int memory;
+
+  sprintf(ps,"/proc/%d/statm",pid);
+  fps = fopen(ps,"r");
+  int i;
+  for (i=0;i<6;i++)
+  fscanf(fps,"%d",&memory);
+  fclose(fps);
+
+  int pagesize = getpagesize() / 1024;
+  memory *= pagesize;
+  return memory;
+}
+
 /* timer, when over time, killed son and program exit */
 void* time_watcher(void* unused){
   while (1){
     long now_time = t_now();
     if(now_time - begin_time - (long)max_time > 0){
-      printf("over time [%lu], killed!\n", now_time);
-      kill(child,SIGKILL);
-      exit(-1);
+      dprintf(fd, "over time [%lu], killed!\n", now_time);
+      pexit(POT);
     }
+    sleep(0);
   }
 }
 
@@ -89,7 +144,10 @@ void parse_args(int argc, char *argv[]){
       }
 
     }else{ // executable path, just one
-      strncpy(executable, argv[i], strlen(argv[i]));
+      int len = strlen(argv[i]);
+      memset(executable, 0, sizeof(EXE_LEN));
+      strncpy(executable, argv[i], len);
+      executable[len]=0;
     }
 
   }
@@ -100,7 +158,6 @@ void parse_args(int argc, char *argv[]){
 int main(int argc, char *argv[])
 {
   long orig_eax;
-  int EXE_LEN = 1024;
 
   // alloc memory for path string
   executable = (char*)malloc(sizeof(EXE_LEN)); 
@@ -119,6 +176,14 @@ int main(int argc, char *argv[])
         );
     return 0;
   }else{
+    fd = 0;
+    fd = open("executer.debug", O_WRONLY|O_CREAT);
+
+    //read config
+    char* config_string = read_config("executer.json");
+    parse_config_json(config_string);
+    free_config_buffer(config_string);
+
     parse_args(argc, argv);
   }
 
@@ -126,15 +191,12 @@ int main(int argc, char *argv[])
   if(child == 0) {
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
     // must use execl for supporting segmentfault check
-    execl(executable, executable, (char*)NULL);
+    execl(executable, "", (char*)NULL);
     exit(0);
   }else{
     struct rusage rinfo;
     int runstat, i=0;
     pthread_t thread_id;
-
-    fd = 0;
-    fd = open("executer.debug", O_WRONLY|O_CREAT);
 
     dprintf(fd, "the child pid is %d\n", child);
 
@@ -144,11 +206,6 @@ int main(int argc, char *argv[])
         max_time, max_mem, executable
     );
 
-    //read config
-    char* config_string = read_config("executer.json");
-    parse_config_json(config_string);
-    free_config_buffer(config_string);
-
     // a new thread for timer, when over time, killed and exit
     pthread_create (&thread_id, NULL, &time_watcher, NULL);
 
@@ -156,28 +213,23 @@ int main(int argc, char *argv[])
       //time_t now_time;
       wait4(child,&runstat,0,&rinfo);
 
-      if (WIFEXITED(runstat))
-      {
+      if (WIFEXITED(runstat)){
         int exitcode = WEXITSTATUS(runstat);
         dprintf(fd, "exitcode [%d]\n", exitcode);
         if (exitcode != 0)
         {
           //Runtime Error
-          printf("Runtime Error\n");
-          exit(-exitcode);
+          dprintf(fd, "Runtime Error\n");
+          pexit(PRE);
         }
         //normal exit
         dprintf(fd, "Exit Normally.\n");
-        exit(0);
-      }
-      else if (WIFSIGNALED(runstat))
-      {
+        pexit(PEN);
+      }else if (WIFSIGNALED(runstat)){
         // call kill(pid, SIGKILL)
         // Ignore
-        exit(-1);
-      }
-      else if (WIFSTOPPED(runstat))
-      {
+        exit(0);
+      }else if (WIFSTOPPED(runstat)){
         int signal = WSTOPSIG(runstat);
 
         if (signal == SIGTRAP){
@@ -196,35 +248,36 @@ int main(int argc, char *argv[])
 
           // syscall check 
           if(!check_syscall(syscall)){
-            dprintf(fd, "[WIFSTOPPED>SIGTRAP] Syscall [%d] is Forbidden.\n", syscall);
-            printf("Syscall [%d] is Forbidden.\n", syscall);
+            dprintf(fd, "Syscall [%d] is Forbidden.\n", syscall);
 
-            kill(child,SIGKILL);
-            return -1;
+            pexit(PSF);
           }
           
         }else if(signal == SIGUSR1){
           // Ignore
         }else if(signal == SIGXFSZ){
-          dprintf(fd, "[WIFSTOPPED>SIGXFSZ] Output Limit Exceed.\n");
-          printf("Output Limit Exceed.\n");
+          dprintf(fd, "Output Limit Exceed.\n");
 
-          exit(-1);
+          pexit(POL);
         }else{
-          dprintf(fd, "[WIFSTOPPED>SIGXFSZ] Runtime Error.\n");
-          printf("Runtime Error.\n");
+          dprintf(fd, "Runtime Error.\n");
 
-          exit(-1);
+          pexit(PRE);
         }
 
       }
 
       ptrace(PTRACE_SYSCALL, child, NULL, NULL);
 
+      // check memory use
+      int use_mem = get_memory_used(child);
+      if(use_mem > max_mem){
+        dprintf(fd, "Out of Memory [%d]\n", use_mem);
+        pexit(POM);
+      }
+
     }
     
-    close(fd);
-
   }
 
   return 0;
