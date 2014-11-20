@@ -1,7 +1,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 pid_t child;
 long begin_time;
@@ -76,6 +76,24 @@ int check_syscall(int syscall){
     };
   }
   return 0; //false, not matched
+}
+
+/* get memory used */
+int get_memory_used(int pid){
+  FILE *fps;
+  char ps[32];
+  int memory;
+
+  sprintf(ps,"/proc/%d/statm",pid);
+  fps = fopen(ps,"r");
+  int i;
+  for (i=0;i<6;i++)
+  fscanf(fps,"%d",&memory);
+  fclose(fps);
+
+  int pagesize = getpagesize() / 1024;
+  memory *= pagesize;
+  return memory;
 }
 
 /* timer, when over time, killed son and program exit */
@@ -195,8 +213,7 @@ int main(int argc, char *argv[])
       //time_t now_time;
       wait4(child,&runstat,0,&rinfo);
 
-      if (WIFEXITED(runstat))
-      {
+      if (WIFEXITED(runstat)){
         int exitcode = WEXITSTATUS(runstat);
         dprintf(fd, "exitcode [%d]\n", exitcode);
         if (exitcode != 0)
@@ -208,15 +225,11 @@ int main(int argc, char *argv[])
         //normal exit
         dprintf(fd, "Exit Normally.\n");
         pexit(PEN);
-      }
-      else if (WIFSIGNALED(runstat))
-      {
+      }else if (WIFSIGNALED(runstat)){
         // call kill(pid, SIGKILL)
         // Ignore
         exit(0);
-      }
-      else if (WIFSTOPPED(runstat))
-      {
+      }else if (WIFSTOPPED(runstat)){
         int signal = WSTOPSIG(runstat);
 
         if (signal == SIGTRAP){
@@ -255,6 +268,13 @@ int main(int argc, char *argv[])
       }
 
       ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+
+      // check memory use
+      int use_mem = get_memory_used(child);
+      if(use_mem > max_mem){
+        dprintf(fd, "Out of Memory [%d]\n", use_mem);
+        pexit(POM);
+      }
 
     }
     
