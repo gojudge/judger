@@ -7,5 +7,5 @@ import (
 
 func main() {
 
-	judger.Judger()
+	core.Judger()
 }

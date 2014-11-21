@@ -15,13 +15,13 @@ func Compile(code string, language string, id int, host string) {
 	var ok bool
 	var compilers map[string]interface{}
 
-	buildPathObj := judger.Config("buildpath")
+	buildPathObj := core.Config("buildpath")
 	buildPath, ok = buildPathObj.(string)
 	if !ok {
 		fmt.Println("`buildpath` is error in config.json")
 	}
 
-	compilerPathObj := judger.Config("compilerpath")
+	compilerPathObj := core.Config("compilerpath")
 	if !ok {
 		fmt.Println("`compilerpath` is error in config.json")
 	}
@@ -62,12 +62,12 @@ func createDirs(id int, host string) error {
 	var err error
 	err = nil
 	userBuildPath := buildPath + DSM + host
-	if !judger.PathExist(userBuildPath) {
-		err = judger.Mkdir(userBuildPath)
+	if !core.PathExist(userBuildPath) {
+		err = core.Mkdir(userBuildPath)
 	}
 	itemBuildPath := userBuildPath + DSM + fmt.Sprintf("%d", id)
-	if !judger.PathExist(itemBuildPath) {
-		err = judger.Mkdir(itemBuildPath)
+	if !core.PathExist(itemBuildPath) {
+		err = core.Mkdir(itemBuildPath)
 	}
 	return err
 }
@@ -79,7 +79,7 @@ func writeCode(code string, id int, host string, language string) error {
 		lang = "c"
 	}
 	path := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.%s", id, DSM, id, lang)
-	return judger.WriteFile(path, code)
+	return core.WriteFile(path, code)
 }
 
 // call cl compiler in windows

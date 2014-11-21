@@ -13,3 +13,6 @@
 
 # config
 /conf/
+
+# database file
+*.db
