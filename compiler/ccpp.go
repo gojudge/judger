@@ -3,6 +3,7 @@ package compiler
 import (
 	"fmt"
 	"github.com/duguying/judger/core"
+	"github.com/gogather/com"
 	"os"
 	"os/exec"
 	"regexp"
@@ -70,12 +71,12 @@ func (this *Compile) createDirs(id int, host string) error {
 	var err error
 	err = nil
 	userBuildPath := this.buildPath + this.dsm + host
-	if !core.PathExist(userBuildPath) {
-		err = core.Mkdir(userBuildPath)
+	if !com.PathExist(userBuildPath) {
+		err = com.Mkdir(userBuildPath)
 	}
 	itemBuildPath := userBuildPath + this.dsm + fmt.Sprintf("%d", id)
-	if !core.PathExist(itemBuildPath) {
-		err = core.Mkdir(itemBuildPath)
+	if !com.PathExist(itemBuildPath) {
+		err = com.Mkdir(itemBuildPath)
 	}
 	return err
 }
@@ -87,7 +88,7 @@ func (this *Compile) writeCode(code string, id int, host string, language string
 		lang = "c"
 	}
 	path := this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d%s%d.%s", id, this.dsm, id, lang)
-	return core.WriteFile(path, code)
+	return com.WriteFile(path, code)
 }
 
 // call cl compiler in windows

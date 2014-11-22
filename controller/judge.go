@@ -3,6 +3,7 @@ package controller
 import (
 	// "fmt"
 	"github.com/duguying/judger/core"
+	"github.com/gogather/com"
 	// "net"
 	"github.com/duguying/judger/compiler"
 	"html"
@@ -20,7 +21,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 
 	passwordRecv, ok := data["password"].(string)
 	if !ok {
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": false, //bool, login result
 			"msg":    "invalid password, password must be string.",
 		})
@@ -30,7 +31,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 
 	if password == passwordRecv {
 		cli.Login(true)
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": true, //bool, login result
 			"os":     runtime.GOOS + " " + runtime.GOARCH,
 			"language": map[string]interface{}{ //language:compiler
@@ -42,7 +43,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 		})
 		cli.Write(result)
 	} else {
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": false, //bool, login result
 		})
 		cli.Write(result)

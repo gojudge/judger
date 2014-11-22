@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/gogather/com"
 	"io"
 	"log"
 	"net"
@@ -46,7 +47,7 @@ func (this *Client) Login(value bool) {
 
 func Parse(frame string, cli *Client) {
 	fmt.Println(frame)
-	json, err := JsonDecode(frame)
+	json, err := com.JsonDecode(frame)
 	if err != nil {
 		log.Print(err)
 	} else {

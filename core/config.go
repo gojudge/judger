@@ -4,7 +4,7 @@ import (
 	// "encoding/json"
 	"fmt"
 	"github.com/Unknwon/goconfig"
-	// "github.com/duguying/judger/utils"
+	"github.com/gogather/com"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,7 +31,7 @@ func (this *Config) loadJsonConfig() error {
 	// kick out the comment
 	regFilter := regexp.MustCompile(`//[\d\D][^\r]*\r`)
 	configString = regFilter.ReplaceAllString(configString, "")
-	this.jsonConfigData, err = JsonDecode(configString)
+	this.jsonConfigData, err = com.JsonDecode(configString)
 	if err != nil {
 		log.Fatalln("Read config file failed. please check `conf/config.json`.")
 	}
