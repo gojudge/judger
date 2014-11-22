@@ -3,47 +3,54 @@ package compiler
 import (
 	"fmt"
 	"github.com/duguying/judger/core"
+	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 )
 
-var buildPath string
-var compilerPath string
-var DSM string // dir split mark
+type Compile struct {
+	system      string
+	dsm         string // dir split mark
+	buildPath   string
+	currentPath string
 
-func Compile(code string, language string, id int, host string) {
-	var ok bool
-	var compilers map[string]interface{}
+	compiler_c string
+	postfix_c  string
 
-	buildPathObj := judger.Config("buildpath")
-	buildPath, ok = buildPathObj.(string)
-	if !ok {
-		fmt.Println("`buildpath` is error in config.json")
-	}
+	compiler_cpp string
+	postfix_cpp  string
+}
 
-	compilerPathObj := judger.Config("compilerpath")
-	if !ok {
-		fmt.Println("`compilerpath` is error in config.json")
-	}
+func (this *Compile) NewCompile() {
+	this.system = runtime.GOOS
+	this.postfix_c = "c"
+	this.postfix_cpp = "cpp"
+	this.currentPath, _ = os.Getwd()
 
-	compilers, ok = compilerPathObj.(map[string]interface{})
-	compilerPath, ok = compilers[language].(string)
-	if !ok {
-		fmt.Println("`compilerpath` is error in config.json")
-	}
+	tmpBuildPath := core.C.Get(runtime.GOOS, "buildpath")
+	tmpCompilerPath := core.C.Get(runtime.GOOS, "compiler_c")
 
+	regFilter := regexp.MustCompile(`/`)
 	if "windows" == runtime.GOOS {
-		DSM = `\`
+		this.dsm = `\`
+		this.buildPath = regFilter.ReplaceAllString(tmpBuildPath, "\\")
+		this.compiler_c = regFilter.ReplaceAllString(tmpCompilerPath, "\\")
 	} else {
-		DSM = `/`
+		this.dsm = `/`
+		this.buildPath = tmpBuildPath
+		this.compiler_c = tmpCompilerPath
 	}
+}
 
-	err := createDirs(id, host)
+func (this *Compile) Run(code string, language string, id int, host string) {
+
+	err := this.createDirs(id, host)
 	if err != nil {
 		fmt.Println(err)
 		return
 	} else {
-		err = writeCode(code, id, host, language)
+		err = this.writeCode(code, id, host, language)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -51,45 +58,54 @@ func Compile(code string, language string, id int, host string) {
 	}
 
 	if "windows" == runtime.GOOS {
-		cl(id, host)
+		this.cl(id, host)
 	} else {
-		gcc(id, host)
+		this.gcc(id, host)
 	}
+
 }
 
 // 创建编译环境的目录结构
-func createDirs(id int, host string) error {
+func (this *Compile) createDirs(id int, host string) error {
 	var err error
 	err = nil
-	userBuildPath := buildPath + DSM + host
-	if !judger.PathExist(userBuildPath) {
-		err = judger.Mkdir(userBuildPath)
+	userBuildPath := this.buildPath + this.dsm + host
+	if !core.PathExist(userBuildPath) {
+		err = core.Mkdir(userBuildPath)
 	}
-	itemBuildPath := userBuildPath + DSM + fmt.Sprintf("%d", id)
-	if !judger.PathExist(itemBuildPath) {
-		err = judger.Mkdir(itemBuildPath)
+	itemBuildPath := userBuildPath + this.dsm + fmt.Sprintf("%d", id)
+	if !core.PathExist(itemBuildPath) {
+		err = core.Mkdir(itemBuildPath)
 	}
 	return err
 }
 
 // 代码写入文件
-func writeCode(code string, id int, host string, language string) error {
+func (this *Compile) writeCode(code string, id int, host string, language string) error {
 	lang := ""
 	if language == "C" {
 		lang = "c"
 	}
-	path := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.%s", id, DSM, id, lang)
-	return judger.WriteFile(path, code)
+	path := this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d%s%d.%s", id, this.dsm, id, lang)
+	return core.WriteFile(path, code)
 }
 
 // call cl compiler in windows
-func cl(id int, host string) {
-	codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d%s%d.c", id, DSM, id)
+func (this *Compile) cl(id int, host string) {
+	codeFile := this.currentPath + this.dsm + this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d%s%d.c", id, this.dsm, id)
+	compiler := this.currentPath + this.dsm + this.compiler_c
+	runPath := this.currentPath + this.dsm + this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d", id)
+
+	fmt.Println("codeFile: " + codeFile)
+	fmt.Println("compiler: " + compiler)
+	fmt.Println("runPath: " + runPath)
+
+	os.Chdir(runPath)
 
 	cmd := exec.Command("cmd", "/K",
-		compilerPath, // path of compiler script
-		codeFile,     // code file path
-		fmt.Sprintf("%s\\%s\\%d", buildPath, host, id), // compiling directory
+		compiler,
+		codeFile,
+		runPath,
 	)
 
 	output, err := cmd.Output()
@@ -98,16 +114,26 @@ func cl(id int, host string) {
 		fmt.Println(err)
 	}
 	fmt.Println(string(output))
+
+	os.Chdir(this.currentPath)
 }
 
 // call gcc compiler in other os
-func gcc(id int, host string) {
-	codeFile := buildPath + DSM + host + DSM + fmt.Sprintf("%d/%d.c", id, id)
+func (this *Compile) gcc(id int, host string) {
+	codeFile := this.currentPath + this.dsm + this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d%s%d.c", id, this.dsm, id)
+	compiler := this.currentPath + this.dsm + this.compiler_c
+	runPath := this.currentPath + this.dsm + this.buildPath + this.dsm + host + this.dsm + fmt.Sprintf("%d", id)
+
+	fmt.Println("codeFile: " + codeFile)
+	fmt.Println("compiler: " + compiler)
+	fmt.Println("runPath: " + runPath)
+
+	os.Chdir(runPath)
 
 	cmd := exec.Command("sh",
-		compilerPath,
+		compiler,
 		codeFile,
-		fmt.Sprintf("%s/%s/%d", buildPath, host, id),
+		runPath,
 	)
 
 	output, err := cmd.Output()
@@ -117,8 +143,5 @@ func gcc(id int, host string) {
 	}
 	fmt.Println(string(output))
 
-}
-
-// call g++ compiler
-func gpp(id int, host string) {
+	os.Chdir(this.currentPath)
 }

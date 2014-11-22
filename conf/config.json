@@ -1,15 +1,31 @@
 {
 	"password":		"123456789",
-	//"buildpath":	"/root/gopath/src/github.com/duguying/judger/build/",
-	"buildpath":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\build",
-	//"compilerpath":	"/root/gopath/src/github.com/duguying/judger/script/gcc.sh",
-	"compilerpath":	{
-		"C":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\script\\devcpp\\gcc.bat",
-		"C++":	"D:\\GOPATH\\src\\github.com\\duguying\\judger\\script\\devcpp\\g++.bat"
-		},
-	"language":		{
-		"C":	{"postfix":"c","compiler":"vc6"},
-		"C++":	{"postfix":"cpp","compiler":"vc6"},
-		"Java":	{"postfix":"java","compiler":"javac"}
+
+	"windows":{
+		"buildpath":		"build",
+		
+		"compiler_c":		"script/devcpp/gcc.bat",
+		"postfix_c":		"c",
+
+		"compiler_cpp":		"script/devcpp/g++.bat",
+		"postfix_cpp":		"cpp",
+
+		"compiler_java":	"javac.exe",
+		"postfix_java":		"java"
+
+	},
+
+	"linux":{
+		"buildpath":		"build/",
+
+		"compiler_c":		"script/gcc.sh",
+		"postfix_c":		"c",
+
+		"compiler_cpp":		"script/g++.sh",
+		"postfix_cpp":		"cpp",
+
+		"compiler_java":	"javac.exe",
+		"postfix_java":		"java"
+
 	}
 }

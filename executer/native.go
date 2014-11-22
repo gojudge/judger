@@ -46,6 +46,8 @@ func runnerWin(runScript string, bin string, argTime string, argMem string) erro
 		fmt.Println(err)
 		return err
 	}
+
+	return nil
 }
 
 // call runner in nix
@@ -64,4 +66,6 @@ func runnerNix(runScript string, bin string, argTime string, argMem string) erro
 		fmt.Println(err)
 		return err
 	}
+
+	return nil
 }

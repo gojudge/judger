@@ -6,6 +6,6 @@ import (
 )
 
 func init() {
-	judger.Router("login", &controller.LoginController{})
-	judger.Router("task_add", &controller.TaskAddController{})
+	core.Router("login", &controller.LoginController{})
+	core.Router("task_add", &controller.TaskAddController{})
 }
