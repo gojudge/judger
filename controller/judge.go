@@ -88,5 +88,7 @@ func (this *TaskAddController) Tcp(data map[string]interface{}, cli *core.Client
 	reg := regexp.MustCompile(`:`)
 	host = reg.ReplaceAllString(host, "#")
 
-	compiler.Compile(code, language, int(id), host)
+	comp := &compiler.Compile{}
+	comp.NewCompile()
+	comp.Run(code, language, int(id), host)
 }

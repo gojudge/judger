@@ -9,10 +9,7 @@ var C *Config
 
 func Judger() {
 	C = &Config{}
-	C.LoadConfig("conf/config.ini")
-
-	// pwd := C.Get("", "password")
-	// fmt.Println("password: " + pwd)
+	C.NewConfig("conf/config.ini")
 
 	DB = &Sqlite{}
 	DB.NewSqlite()

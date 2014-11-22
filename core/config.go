@@ -80,7 +80,7 @@ func (this *Config) jsonGet(key1 string, key2 string) string {
 }
 
 // load config
-func (this *Config) LoadConfig(path string) {
+func (this *Config) NewConfig(path string) {
 	this.configFilePath = path
 
 	regFilter := regexp.MustCompile(`[\d\D][^\r\n]*\.ini$`)
