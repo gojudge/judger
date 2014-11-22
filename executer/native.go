@@ -40,7 +40,7 @@ func runnerWin(runScript string, bin string, argTime string, argMem string) erro
 		argMem,    // memory limit
 	)
 
-	output, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		fmt.Println("失败")
 		fmt.Println(err)
@@ -60,7 +60,7 @@ func runnerNix(runScript string, bin string, argTime string, argMem string) erro
 		argMem,    // memory limit
 	)
 
-	output, err := cmd.Output()
+	_, err := cmd.Output()
 	if err != nil {
 		fmt.Println("失败")
 		fmt.Println(err)

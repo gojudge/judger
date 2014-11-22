@@ -98,15 +98,18 @@ func handleConnection(tcpConn net.Conn, cid int) {
 			fmt.Printf("The RemoteAddr:%s is closed!\n", tcpConn.RemoteAddr().String())
 			return
 		}
+
+		// Accident exit
 		handleError(err, tcpConn)
+		if tcpConn != nil && err != nil {
+			return
+		}
+
 		if n > 0 {
 			frame = frame + string(buff[:n])
 
 			reg := regexp.MustCompile(MARK)
 			if len(reg.FindAllString(string(buff[:n]), -1)) > 0 {
-				// kick out the comment
-				regFilter := regexp.MustCompile(`//[\d\D][^\r]*\r`)
-				frame = regFilter.ReplaceAllString(frame, "")
 				// get the json
 				frame = reg.ReplaceAllString(frame, "")
 				// submit json task
