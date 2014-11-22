@@ -11,8 +11,5 @@
 # tools
 /tools/
 
-# config
-/conf/
-
 # database file
 *.db

@@ -12,25 +12,10 @@ var compilerPath string
 var DSM string // dir split mark
 
 func Compile(code string, language string, id int, host string) {
-	var ok bool
-	var compilers map[string]interface{}
 
-	buildPathObj := core.Config("buildpath")
-	buildPath, ok = buildPathObj.(string)
-	if !ok {
-		fmt.Println("`buildpath` is error in config.json")
-	}
+	buildPath = core.C.Get("", "buildpath")
 
-	compilerPathObj := core.Config("compilerpath")
-	if !ok {
-		fmt.Println("`compilerpath` is error in config.json")
-	}
-
-	compilers, ok = compilerPathObj.(map[string]interface{})
-	compilerPath, ok = compilers[language].(string)
-	if !ok {
-		fmt.Println("`compilerpath` is error in config.json")
-	}
+	compilerPath = core.C.Get("windows", "compiler_c")
 
 	if "windows" == runtime.GOOS {
 		DSM = `\`

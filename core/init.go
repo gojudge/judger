@@ -1,11 +1,21 @@
 package core
 
-var DB Sqlite
+import (
+// "fmt"
+)
+
+var DB *Sqlite
+var C *Config
 
 func Judger() {
-	ConfigInit()
-	TcpStart()
+	C = &Config{}
+	C.LoadConfig("conf/config.ini")
 
-	DB := &Sqlite{}
+	// pwd := C.Get("", "password")
+	// fmt.Println("password: " + pwd)
+
+	DB = &Sqlite{}
 	DB.NewSqlite()
+
+	TcpStart()
 }

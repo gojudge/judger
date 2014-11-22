@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/duguying/judger/core"
 	// "net"
 	"github.com/duguying/judger/compiler"
@@ -16,18 +16,7 @@ type LoginController struct {
 }
 
 func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) {
-	passwordObj := core.Config("password")
-	password, ok := passwordObj.(string)
-
-	if !ok {
-		fmt.Println("invalid password in `config.json`, password must be string.")
-		result := core.JsonEncode(map[string]interface{}{
-			"result": false, //bool, login result
-			"msg":    "internal error!",
-		})
-		cli.Write(result)
-		cli.Close()
-	}
+	password := core.C.Get("", "password")
 
 	passwordRecv, ok := data["password"].(string)
 	if !ok {
