@@ -3,7 +3,7 @@ package judge
 import (
 	"errors"
 	// "github.com/gogather/com/log"
-	"fmt"
+	// "fmt"
 	"github.com/duguying/judger/core"
 	"html"
 	"runtime"
@@ -44,7 +44,7 @@ func AddTask(data map[string]interface{}) error {
 
 	if err == nil {
 		// execute the binary in sandbox
-		err = RunNativeInSandbox(core.C.Get(runtime.GOOS, "run_script"), fmt.Sprintf("%d", int(id)), runPath, 0, 0)
+		err = RunNativeInSandbox(core.C.Get(runtime.GOOS, "run_script"), runPath, 0, 0)
 	}
 
 	// TODO gather result

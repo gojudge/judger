@@ -10,7 +10,7 @@ import (
 )
 
 // run native code(compiled via c/c++) in sandbox
-func RunNativeInSandbox(runScript string, bin string, runPath string, time int, mem int) error {
+func RunNativeInSandbox(runScript string, runPath string, time int, mem int) error {
 	var argTime string
 	var argMem string
 	var binFilePath string
@@ -32,9 +32,9 @@ func RunNativeInSandbox(runScript string, bin string, runPath string, time int, 
 	os.Chdir(runPath)
 
 	if runtime.GOOS == "windows" {
-		binFilePath = filepath.Join(runPath, bin+".exe")
+		binFilePath = filepath.Join(runPath, "a.exe")
 	} else {
-		binFilePath = filepath.Join(runPath, bin)
+		binFilePath = filepath.Join(runPath, "a.out")
 	}
 
 	runScript = filepath.Join(currentPath, runScript)
