@@ -40,10 +40,14 @@ func AddTask(data map[string]interface{}) error {
 
 	// run compiling
 	compiler.NewCompile()
-	compiler.Run(code, lang, int(id), sid)
+	runPath, err := compiler.Run(code, lang, int(id), sid)
 
-	// execute the binary in sandbox
-	RunNativeInSandbox(core.C.Get(runtime.GOOS, "run_script"), fmt.Sprintf("%d", id), 0, 0)
+	if err == nil {
+		// execute the binary in sandbox
+		err = RunNativeInSandbox(core.C.Get(runtime.GOOS, "run_script"), fmt.Sprintf("%d", int(id)), runPath, 0, 0)
+	}
 
-	return nil
+	// TODO gather result
+
+	return err
 }

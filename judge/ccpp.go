@@ -40,21 +40,21 @@ func (this *Compile) NewCompile() {
 	log.Blueln("[compiler path]", this.compiler_c)
 }
 
-func (this *Compile) Run(code string, language string, id int, sid string) error {
+func (this *Compile) Run(code string, language string, id int, sid string) (string, error) {
 
 	err := this.createDirs(id, sid)
 	if err != nil {
 		log.Warnln(err)
-		return err
+		return "", err
 	} else {
 		err = this.writeCode(code, id, language)
 		if err != nil {
 			log.Warnln(err)
-			return err
+			return "", err
 		}
 	}
 
-	return this.gcc(id)
+	return this.itemBuildPath, this.gcc(id)
 
 }
 
