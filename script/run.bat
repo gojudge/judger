@@ -5,6 +5,6 @@
 ::%3 is -m=mem
 
 ::@ echo off 
-chcp 65001
+::chcp 65001
 cd %4
 "D:\GOPATH\src\github.com\duguying\judger\sandbox\c\build\executer.exe" %1 %2 %3 > RUN.LOG

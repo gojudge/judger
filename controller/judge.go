@@ -3,10 +3,11 @@ package controller
 import (
 	// "fmt"
 	"github.com/duguying/judger/core"
+	"github.com/gogather/com"
 	// "net"
-	"github.com/duguying/judger/compiler"
-	"html"
-	"regexp"
+	"github.com/duguying/judger/judge"
+	// "html"
+	// "regexp"
 	"runtime"
 )
 
@@ -20,7 +21,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 
 	passwordRecv, ok := data["password"].(string)
 	if !ok {
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": false, //bool, login result
 			"msg":    "invalid password, password must be string.",
 		})
@@ -30,7 +31,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 
 	if password == passwordRecv {
 		cli.Login(true)
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": true, //bool, login result
 			"os":     runtime.GOOS + " " + runtime.GOARCH,
 			"language": map[string]interface{}{ //language:compiler
@@ -42,7 +43,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 		})
 		cli.Write(result)
 	} else {
-		result := core.JsonEncode(map[string]interface{}{
+		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": false, //bool, login result
 		})
 		cli.Write(result)
@@ -57,38 +58,5 @@ type TaskAddController struct {
 }
 
 func (this *TaskAddController) Tcp(data map[string]interface{}, cli *core.Client) {
-
-	var ok bool
-	var id float64
-	var language string
-	var code string
-
-	id, ok = data["id"].(float64)
-	if !ok {
-		cli.Write("invalid id")
-		return
-	}
-
-	language, ok = data["language"].(string)
-	if !ok {
-		cli.Write("invalid language name, should be string")
-		return
-	}
-
-	code, ok = data["code"].(string)
-	if !ok {
-		cli.Write("invalid code, should be string")
-		return
-	}
-	// HTML反转义
-	code = html.UnescapeString(code)
-
-	// get the host
-	host := cli.Conn.RemoteAddr().String()
-	reg := regexp.MustCompile(`:`)
-	host = reg.ReplaceAllString(host, "#")
-
-	comp := &compiler.Compile{}
-	comp.NewCompile()
-	comp.Run(code, language, int(id), host)
+	judge.AddTask(data)
 }
