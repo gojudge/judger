@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/Unknwon/goconfig"
 	"github.com/gogather/com"
+	"github.com/gogather/com/log"
 	"io/ioutil"
-	"log"
 	"os"
 	"regexp"
 )

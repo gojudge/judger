@@ -1,8 +1,10 @@
-package executer
+package judge
 
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 )
 
 // run native code(compiled via c/c++) in sandbox
@@ -22,17 +24,25 @@ func RunNativeInSandbox(runScript string, bin string, time int, mem int) {
 		argMem = ""
 	}
 
-	runnerWin(runScript,
-		bin,
-		argTime,
-		argMem,
-	)
+	if runtime.GOOS == "windows" {
+		runnerWin(runScript,
+			bin,
+			argTime,
+			argMem,
+		)
+	} else {
+		runnerNix(runScript,
+			bin,
+			argTime,
+			argMem,
+		)
+	}
 
 }
 
 // call runner in windows
 func runnerWin(runScript string, bin string, argTime string, argMem string) error {
-	binPath := `.\` + bin + ".exe"
+	binPath := filepath.Join(bin)
 	cmd := exec.Command("cmd", "/K",
 		runScript, // runner script
 		binPath,   // executable name
@@ -52,10 +62,10 @@ func runnerWin(runScript string, bin string, argTime string, argMem string) erro
 
 // call runner in nix
 func runnerNix(runScript string, bin string, argTime string, argMem string) error {
-	binPath := `./` + bin
+	binPath := filepath.Join(bin)
 	cmd := exec.Command("sh",
 		runScript, // runner script
-		bin,       // executable name
+		binPath,   // executable name
 		argTime,   // time limit
 		argMem,    // memory limit
 	)
