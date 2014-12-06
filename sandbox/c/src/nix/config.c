@@ -61,7 +61,11 @@ char* read_config(const char* filename){
   int len = 0;
   char* buffer;
 
-  FILE *f=fopen(filename,"rb");fseek(f,0,SEEK_END);long length=ftell(f);fseek(f,0,SEEK_SET);
+  //printf("[filename]\n%s\n", filename);
+  FILE *f=fopen(filename,"rb");
+  fseek(f,0,SEEK_END);
+  long length=ftell(f);
+  fseek(f,0,SEEK_SET);
 
   if(length <= 0){
     return (char*)NULL;

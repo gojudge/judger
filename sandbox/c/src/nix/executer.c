@@ -8,6 +8,7 @@ long begin_time;
 char* executable = NULL;
 int EXE_LEN = 1024;
 int fd = 0;
+char* config_path = NULL;
 
 enum ecode{
   PEN,      // Exit Normally
@@ -111,16 +112,17 @@ void* time_watcher(void* unused){
 /* parse command args */
 void parse_args(int argc, char *argv[]){
   int i = 0;
+  int len = 0;
   char* arg = NULL;
   char* buff = NULL;
   const int BUF_LEN = 128;
   char* tag_name = NULL;
   char* tag_value = NULL;
 
-  buff = (char*)malloc(sizeof(BUF_LEN));
+  buff = (char*)malloc(sizeof(char)*BUF_LEN);
 
   for(i = 1; i < argc; i++){
-    memset(buff, 0, sizeof(BUF_LEN));
+    memset(buff, 0, sizeof(char)*BUF_LEN);
     strncpy(buff, argv[i], strlen(argv[i])+1);
 
     if(buff[0] == '-'){               // options
@@ -141,11 +143,16 @@ void parse_args(int argc, char *argv[]){
         }else{
           dprintf(fd, "invalid memory [%d], use default.\n", tmp_mem);
         }
+      }else if(!strcmp(tag_name, "c")){
+        len = strlen(tag_value);
+        memset(config_path, 0, sizeof(char)*EXE_LEN);
+        strncpy(config_path, tag_value, len);
+        config_path[len] = 0;
       }
 
     }else{ // executable path, just one
       int len = strlen(argv[i]);
-      memset(executable, 0, sizeof(EXE_LEN));
+      memset(executable, 0, sizeof(char)*EXE_LEN);
       strncpy(executable, argv[i], len);
       executable[len]=0;
     }
@@ -160,8 +167,12 @@ int main(int argc, char *argv[])
   long orig_eax;
 
   // alloc memory for path string
-  executable = (char*)malloc(sizeof(EXE_LEN)); 
-  memset(executable, 0, sizeof(EXE_LEN));
+  executable = (char*)malloc(sizeof(char)*EXE_LEN); 
+  memset(executable, 0, sizeof(char)*EXE_LEN);
+
+  // alloc memory for config path string
+  config_path = (char*)malloc(sizeof(char)*EXE_LEN);
+  memset(config_path, 0, sizeof(char)*EXE_LEN);
 
   if(argc<2){
     printf(
@@ -179,19 +190,31 @@ int main(int argc, char *argv[])
     fd = 0;
     fd = open("executer.debug", O_WRONLY|O_CREAT);
 
+    parse_args(argc, argv);
+
     //read config
-    char* config_string = read_config("executer.json");
+    char* config_string = read_config(config_path);
     parse_config_json(config_string);
+    //printf("[config]\n%s\n", config_string);
     free_config_buffer(config_string);
 
     parse_args(argc, argv);
   }
 
+  //printf("[ep] %s\n", executable);
+
   child = fork();
   if(child == 0) {
+    int exec_result = 0;
+
     ptrace(PTRACE_TRACEME, 0, NULL, NULL);
+    
     // must use execl for supporting segmentfault check
-    execl(executable, "", (char*)NULL);
+    exec_result = execl(executable, "", (char*)NULL);
+    if(-1 == exec_result){
+      printf("execute [%s] failed!", executable);
+    }
+    
     exit(0);
   }else{
     struct rusage rinfo;

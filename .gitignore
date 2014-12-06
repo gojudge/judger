@@ -13,3 +13,10 @@
 
 # database file
 *.db
+
+# debug
+*.debug
+
+# log
+*.LOG
+
