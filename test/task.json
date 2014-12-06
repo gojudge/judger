@@ -1,0 +1,8 @@
+{
+    "action": "task_add",
+    "sid":    "randomstring",
+    "id":   12,
+    "time":   123456789,
+    "language": "C",
+    "code":   "main(void){\n  printf(&quot;hello world.\n&quot;);\n  return 0;\n}"
+}#

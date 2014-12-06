@@ -5,4 +5,4 @@
 # %3 is -m=mem
 
 cd %4
-/root/gopath/src/github.com/duguying/judger/sandbox/c/build/executer %1 %2 %3 > RUN.LOG
+/root/gopath/src/github.com/duguying/judger/sandbox/c/build/executer %1 %2 %3 -c=/root/gopath/src/github.com/duguying/judger/sandbox/c/build/executer.json > RUN.LOG
