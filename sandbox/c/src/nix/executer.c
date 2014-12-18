@@ -1,3 +1,10 @@
+/**
+ * File Name: executer.c
+ * Author: rex
+ * Mail: duguying2008@gmail.com 
+ * Created Time: 2014年10月21日 星期二 23时05分12秒
+ */
+
 #include "executer.h"
 #include <errno.h>
 
@@ -5,304 +12,307 @@
 
 pid_t child;
 long begin_time;
-char* executable = NULL;
+char *executable = NULL;
 int EXE_LEN = 1024;
 int fd = 0;
-char* config_path = NULL;
+char *config_path = NULL;
 
-enum ecode{
-  PEN,      // Exit Normally
-  PRE,      // Runtime Error
-  POM,      // Out of Memory
-  POT,      // Out of Time
-  POL,      // Output Limit Exceed
-  PSF       // Syscall Forbidden
+enum ecode {
+	PEN,						// Exit Normally
+	PRE,						// Runtime Error
+	POM,						// Out of Memory
+	POT,						// Out of Time
+	POL,						// Output Limit Exceed
+	PSF							// Syscall Forbidden
 };
 
 /* print error */
-void PRTERR(){
-  extern int errno;
-  char* message;
-  
-  printf("errno [%d]\n", errno);
-  message = strerror(errno);
-  printf("Mesg: %s\n", message);
+void PRTERR()
+{
+	extern int errno;
+	char *message;
+
+	printf("errno [%d]\n", errno);
+	message = strerror(errno);
+	printf("Mesg: %s\n", message);
 }
 
 /* now, get now time of microsecond */
-long t_now(){
-  long tmp_now = 0;
-  struct timeval tv;
+long t_now()
+{
+	long tmp_now = 0;
+	struct timeval tv;
 
-  memset(&tv, 0, sizeof(struct timeval));
-  gettimeofday(&tv, NULL);
+	memset(&tv, 0, sizeof(struct timeval));
+	gettimeofday(&tv, NULL);
 
-  tmp_now = (long)tv.tv_sec * 1000 + (long)tv.tv_usec / 1000;
+	tmp_now = (long)tv.tv_sec * 1000 + (long)tv.tv_usec / 1000;
 
-  return tmp_now;
+	return tmp_now;
 }
 
 /* process exit */
-void pexit(enum ecode EC){
-  if(EC == PEN){
-    // Ignore
-  }else if(EC == POT){
-    printf("Out of Time.\n");
-    kill(child,SIGKILL);
-  }else if(EC == PSF){
-    printf("Syscall Forbidden.\n");
-    kill(child,SIGKILL);
-  }else if(EC == POM){
-    printf("Out of Memory.\n");
-    kill(child,SIGKILL);
-  }else if(EC == PRE){
-    printf("Runtime Error.\n");
-  }else if(EC == POL){
-    printf("Output Limit Exceed.\n");
-    kill(child,SIGKILL);
-  }else{
-    dprintf(fd, "EC [%d]\n", EC);
-  }
+void pexit(enum ecode EC)
+{
+	if (EC == PEN) {
+		// Ignore
+	} else if (EC == POT) {
+		printf("Out of Time.\n");
+		kill(child, SIGKILL);
+	} else if (EC == PSF) {
+		printf("Syscall Forbidden.\n");
+		kill(child, SIGKILL);
+	} else if (EC == POM) {
+		printf("Out of Memory.\n");
+		kill(child, SIGKILL);
+	} else if (EC == PRE) {
+		printf("Runtime Error.\n");
+	} else if (EC == POL) {
+		printf("Output Limit Exceed.\n");
+		kill(child, SIGKILL);
+	} else {
+		dprintf(fd, "EC [%d]\n", EC);
+	}
 
-  close(fd);
-  exit(0);
+	close(fd);
+	exit(0);
 }
 
 /* if the syscall is forbidden, return 0 */
-int check_syscall(int syscall){
-  int i = 0;
-  for(i = 0; i < array_len; i++){
-    if(syscall==allow_syscall[i]){
-      return 1; //true, the syscall matched one of the list, pass
-    };
-  }
-  return 0; //false, not matched
+int check_syscall(int syscall)
+{
+	int i = 0;
+	for (i = 0; i < array_len; i++) {
+		if (syscall == allow_syscall[i]) {
+			return 1;			//true, the syscall matched one of the list, pass
+		};
+	}
+	return 0;					//false, not matched
 }
 
 /* get memory used */
-int get_memory_used(int pid){
-  FILE *fps;
-  char ps[32];
-  int memory;
+int get_memory_used(int pid)
+{
+	FILE *fps;
+	char ps[32];
+	int memory;
 
-  sprintf(ps,"/proc/%d/statm",pid);
-  fps = fopen(ps,"r");
-  int i;
-  for (i=0;i<6;i++)
-  fscanf(fps,"%d",&memory);
-  fclose(fps);
+	sprintf(ps, "/proc/%d/statm", pid);
+	fps = fopen(ps, "r");
+	int i;
+	for (i = 0; i < 6; i++)
+		fscanf(fps, "%d", &memory);
+	fclose(fps);
 
-  int pagesize = getpagesize() / 1024;
-  memory *= pagesize;
-  return memory;
+	int pagesize = getpagesize() / 1024;
+	memory *= pagesize;
+	return memory;
 }
 
 /* timer, when over time, killed son and program exit */
-void* time_watcher(void* unused){
-  while (1){
-    long now_time = t_now();
-    if(now_time - begin_time - (long)max_time > 0){
-      dprintf(fd, "over time [%lu], killed!\n", now_time);
-      pexit(POT);
-    }
-    sleep(0);
-  }
+void *time_watcher(void *unused)
+{
+	while (1) {
+		long now_time = t_now();
+		if (now_time - begin_time - (long)max_time > 0) {
+			dprintf(fd, "over time [%lu], killed!\n", now_time);
+			pexit(POT);
+		}
+		sleep(0);
+	}
 }
 
 /* parse command args */
-void parse_args(int argc, char *argv[]){
-  int i = 0;
-  int len = 0;
-  char* arg = NULL;
-  char* buff = NULL;
-  const int BUF_LEN = 128;
-  char* tag_name = NULL;
-  char* tag_value = NULL;
+void parse_args(int argc, char *argv[])
+{
+	int i = 0;
+	int len = 0;
+	char *arg = NULL;
+	char *buff = NULL;
+	const int BUF_LEN = 128;
+	char *tag_name = NULL;
+	char *tag_value = NULL;
 
-  buff = (char*)malloc(sizeof(char)*BUF_LEN);
+	buff = (char *)malloc(sizeof(char) * BUF_LEN);
 
-  for(i = 1; i < argc; i++){
-    memset(buff, 0, sizeof(char)*BUF_LEN);
-    strncpy(buff, argv[i], strlen(argv[i])+1);
+	for (i = 1; i < argc; i++) {
+		memset(buff, 0, sizeof(char) * BUF_LEN);
+		strncpy(buff, argv[i], strlen(argv[i]) + 1);
 
-    if(buff[0] == '-'){               // options
-      tag_name = strtok(buff+1, "="); // string time
-      tag_value = strtok(NULL, "=");  // decemal time value
+		if (buff[0] == '-') {	// options
+			tag_name = strtok(buff + 1, "=");	// string time
+			tag_value = strtok(NULL, "=");	// decemal time value
 
-      if(!strcmp(tag_name, "t")){     // time
-        int tmp_time = atoi(tag_value);
-        if(tmp_time > 0){
-          max_time = tmp_time;
-        }else{
-          dprintf(fd, "invalid time [%d], use default.\n", tmp_time);
-        }
-      }else if(!strcmp(tag_name, "m")){  // memory
-        int tmp_mem = atoi(tag_value);
-        if(tmp_mem > 0){
-          max_mem = tmp_mem;
-        }else{
-          dprintf(fd, "invalid memory [%d], use default.\n", tmp_mem);
-        }
-      }else if(!strcmp(tag_name, "c")){
-        len = strlen(tag_value);
-        memset(config_path, 0, sizeof(char)*EXE_LEN);
-        strncpy(config_path, tag_value, len);
-        config_path[len] = 0;
-      }
+			if (!strcmp(tag_name, "t")) {	// time
+				int tmp_time = atoi(tag_value);
+				if (tmp_time > 0) {
+					max_time = tmp_time;
+				} else {
+					dprintf(fd, "invalid time [%d], use default.\n", tmp_time);
+				}
+			} else if (!strcmp(tag_name, "m")) {	// memory
+				int tmp_mem = atoi(tag_value);
+				if (tmp_mem > 0) {
+					max_mem = tmp_mem;
+				} else {
+					dprintf(fd, "invalid memory [%d], use default.\n", tmp_mem);
+				}
+			} else if (!strcmp(tag_name, "c")) {
+				len = strlen(tag_value);
+				memset(config_path, 0, sizeof(char) * EXE_LEN);
+				strncpy(config_path, tag_value, len);
+				config_path[len] = 0;
+			}
 
-    }else{ // executable path, just one
-      int len = strlen(argv[i]);
-      memset(executable, 0, sizeof(char)*EXE_LEN);
-      strncpy(executable, argv[i], len);
-      executable[len]=0;
-    }
+		} else {				// executable path, just one
+			int len = strlen(argv[i]);
+			memset(executable, 0, sizeof(char) * EXE_LEN);
+			strncpy(executable, argv[i], len);
+			executable[len] = 0;
+		}
 
-  }
+	}
 
-  return;
+	return;
 }
 
 int main(int argc, char *argv[])
 {
-  long orig_eax;
+	long orig_eax;
 
-  // alloc memory for path string
-  executable = (char*)malloc(sizeof(char)*EXE_LEN); 
-  memset(executable, 0, sizeof(char)*EXE_LEN);
+	// alloc memory for path string
+	executable = (char *)malloc(sizeof(char) * EXE_LEN);
+	memset(executable, 0, sizeof(char) * EXE_LEN);
 
-  // alloc memory for config path string
-  config_path = (char*)malloc(sizeof(char)*EXE_LEN);
-  memset(config_path, 0, sizeof(char)*EXE_LEN);
+	// alloc memory for config path string
+	config_path = (char *)malloc(sizeof(char) * EXE_LEN);
+	memset(config_path, 0, sizeof(char) * EXE_LEN);
 
-  if(argc<2){
-    printf(
-        "\033[0;39;1mSandbox for Linux Native\033[0m\n"
-        "Usage: executer <option> <command>\n"
-        "option:\n"
-        "  \033[0;33m-t=time\033[0m     program max time\n"
-        "  \033[0;33m-m=mem\033[0m      program max memory\n"
-        "\033[0;32mversion "
-        VERSION
-        "\033[0m\n"
-        );
-    return 0;
-  }else{
-    fd = 0;
-    fd = open("executer.debug", O_WRONLY|O_CREAT);
+	if (argc < 2) {
+		printf("\033[0;39;1mSandbox for Linux Native\033[0m\n"
+			   "Usage: executer <option> <command>\n"
+			   "option:\n"
+			   "  \033[0;33m-t=time\033[0m     program max time\n"
+			   "  \033[0;33m-m=mem\033[0m      program max memory\n"
+			   "\033[0;32mversion " VERSION "\033[0m\n");
+		return 0;
+	} else {
+		fd = 0;
+		fd = open("executer.debug", O_WRONLY | O_CREAT);
 
-    parse_args(argc, argv);
+		char *tmp_config_name = "executer.json";
+		strncpy(config_path, tmp_config_name, strlen(tmp_config_name));
+		config_path[strlen(tmp_config_name)] = 0;
 
-    //read config
-    char* config_string = read_config(config_path);
-    parse_config_json(config_string);
-    //printf("[config]\n%s\n", config_string);
-    free_config_buffer(config_string);
+		parse_args(argc, argv);
 
-    parse_args(argc, argv);
-  }
+		//read config
+		char *config_string = read_config(config_path);
+		parse_config_json(config_string);
+		//printf("[config]\n%s\n", config_string);
+		free_config_buffer(config_string);
 
-  //printf("[ep] %s\n", executable);
+	}
 
-  child = fork();
-  if(child == 0) {
-    int exec_result = 0;
+	//printf("[ep] %s\n", executable);
 
-    ptrace(PTRACE_TRACEME, 0, NULL, NULL);
-    
-    // must use execl for supporting segmentfault check
-    exec_result = execl(executable, "", (char*)NULL);
-    if(-1 == exec_result){
-      printf("execute [%s] failed!", executable);
-    }
-    
-    exit(0);
-  }else{
-    struct rusage rinfo;
-    int runstat, i=0;
-    pthread_t thread_id;
+	child = fork();
+	if (child == 0) {
+		int exec_result = 0;
 
-    dprintf(fd, "the child pid is %d\n", child);
+		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 
-    begin_time = t_now();
-    dprintf(fd, "begin time [%lu]\n", begin_time);
-    dprintf(fd, "max_time [%lu]\nmax_mem [%d]\nexecutable path [%s]\n", 
-        max_time, max_mem, executable
-    );
+		// must use execl for supporting segmentfault check
+		exec_result = execl(executable, "", (char *)NULL);
+		if (-1 == exec_result) {
+			printf("execute [%s] failed!", executable);
+		}
 
-    // a new thread for timer, when over time, killed and exit
-    pthread_create (&thread_id, NULL, &time_watcher, NULL);
+		exit(0);
+	} else {
+		struct rusage rinfo;
+		int runstat, i = 0;
+		pthread_t thread_id;
 
-    for(;;){
-      //time_t now_time;
-      wait4(child,&runstat,0,&rinfo);
+		dprintf(fd, "the child pid is %d\n", child);
 
-      if (WIFEXITED(runstat)){
-        int exitcode = WEXITSTATUS(runstat);
-        dprintf(fd, "exitcode [%d]\n", exitcode);
-        if (exitcode != 0)
-        {
-          //Runtime Error
-          dprintf(fd, "Runtime Error\n");
-          pexit(PRE);
-        }
-        //normal exit
-        dprintf(fd, "Exit Normally.\n");
-        pexit(PEN);
-      }else if (WIFSIGNALED(runstat)){
-        // call kill(pid, SIGKILL)
-        // Ignore
-        exit(0);
-      }else if (WIFSTOPPED(runstat)){
-        int signal = WSTOPSIG(runstat);
+		begin_time = t_now();
+		dprintf(fd, "begin time [%lu]\n", begin_time);
+		dprintf(fd, "max_time [%lu]\nmax_mem [%d]\nexecutable path [%s]\n",
+				max_time, max_mem, executable);
 
-        if (signal == SIGTRAP){
-          struct user_regs_struct reg;
-          int syscall;
-          static int executed = 0;
-           
-          ptrace(PTRACE_GETREGS,child,NULL,&reg);
-          #ifdef __i386__
-          syscall = reg.orig_eax;
-          #else
-          syscall = reg.orig_rax;
-          #endif
-          
-          dprintf(fd, "syscall: %d\n", syscall);
+		// a new thread for timer, when over time, killed and exit
+		pthread_create(&thread_id, NULL, &time_watcher, NULL);
 
-          // syscall check 
-          if(!check_syscall(syscall)){
-            dprintf(fd, "Syscall [%d] is Forbidden.\n", syscall);
+		for (;;) {
+			//time_t now_time;
+			wait4(child, &runstat, 0, &rinfo);
 
-            pexit(PSF);
-          }
-          
-        }else if(signal == SIGUSR1){
-          // Ignore
-        }else if(signal == SIGXFSZ){
-          dprintf(fd, "Output Limit Exceed.\n");
+			if (WIFEXITED(runstat)) {
+				int exitcode = WEXITSTATUS(runstat);
+				dprintf(fd, "exitcode [%d]\n", exitcode);
+				if (exitcode != 0) {
+					//Runtime Error
+					dprintf(fd, "Runtime Error\n");
+					pexit(PRE);
+				}
+				//normal exit
+				dprintf(fd, "Exit Normally.\n");
+				pexit(PEN);
+			} else if (WIFSIGNALED(runstat)) {
+				// call kill(pid, SIGKILL)
+				// Ignore
+				exit(0);
+			} else if (WIFSTOPPED(runstat)) {
+				int signal = WSTOPSIG(runstat);
 
-          pexit(POL);
-        }else{
-          dprintf(fd, "Runtime Error.\n");
+				if (signal == SIGTRAP) {
+					struct user_regs_struct reg;
+					int syscall;
+					static int executed = 0;
 
-          pexit(PRE);
-        }
+					ptrace(PTRACE_GETREGS, child, NULL, &reg);
+#ifdef __i386__
+					syscall = reg.orig_eax;
+#else
+					syscall = reg.orig_rax;
+#endif
 
-      }
+					dprintf(fd, "syscall: %d\n", syscall);
 
-      ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+					// syscall check 
+					if (!check_syscall(syscall)) {
+						dprintf(fd, "Syscall [%d] is Forbidden.\n", syscall);
 
-      // check memory use
-      int use_mem = get_memory_used(child);
-      if(use_mem > max_mem){
-        dprintf(fd, "Out of Memory [%d]\n", use_mem);
-        pexit(POM);
-      }
+						pexit(PSF);
+					}
 
-    }
-    
-  }
+				} else if (signal == SIGUSR1) {
+					// Ignore
+				} else if (signal == SIGXFSZ) {
+					dprintf(fd, "Output Limit Exceed.\n");
 
-  return 0;
+					pexit(POL);
+				} else {
+					dprintf(fd, "Runtime Error.\n");
+
+					pexit(PRE);
+				}
+
+			}
+
+			ptrace(PTRACE_SYSCALL, child, NULL, NULL);
+
+			// check memory use
+			int use_mem = get_memory_used(child);
+			if (use_mem > max_mem) {
+				dprintf(fd, "Out of Memory [%d]\n", use_mem);
+				pexit(POM);
+			}
+
+		}
+
+	}
+
+	return 0;
 }
-
