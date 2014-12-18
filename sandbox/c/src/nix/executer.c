@@ -8,7 +8,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 
 pid_t child;
 long begin_time;
@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
 			   "option:\n"
 			   "  \033[0;33m-t=time\033[0m     program max time\n"
 			   "  \033[0;33m-m=mem\033[0m      program max memory\n"
+			   "  \033[0;33m-c=path\033[0m     config file path\n"
 			   "\033[0;32mversion " VERSION "\033[0m\n");
 		return 0;
 	} else {
@@ -209,12 +210,9 @@ int main(int argc, char *argv[])
 		//read config
 		char *config_string = read_config(config_path);
 		parse_config_json(config_string);
-		//printf("[config]\n%s\n", config_string);
 		free_config_buffer(config_string);
 
 	}
-
-	//printf("[ep] %s\n", executable);
 
 	child = fork();
 	if (child == 0) {
