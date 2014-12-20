@@ -1,13 +1,9 @@
 package controller
 
 import (
-	// "fmt"
 	"github.com/duguying/judger/core"
-	"github.com/gogather/com"
-	// "net"
 	"github.com/duguying/judger/judge"
-	// "html"
-	// "regexp"
+	"github.com/gogather/com"
 	"runtime"
 )
 
@@ -59,4 +55,11 @@ type TaskAddController struct {
 
 func (this *TaskAddController) Tcp(data map[string]interface{}, cli *core.Client) {
 	judge.AddTask(data)
+
+	result, _ := com.JsonEncode(map[string]interface{}{
+		"result": true, //bool, login result
+		"msg":    "response for task",
+	})
+	cli.Write(result)
+	cli.Close()
 }

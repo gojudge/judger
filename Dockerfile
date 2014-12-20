@@ -15,6 +15,7 @@ WORKDIR /gopath/src/github.com/duguying/judger
 RUN git checkout master
 RUN go get
 RUN go build
+RUN mkdir build
 
 EXPOSE 1004 1005
 ENTRYPOINT []
