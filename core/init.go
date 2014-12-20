@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/gogather/com"
 	"path/filepath"
+	"runtime"
 )
 
 var DB *Sqlite
@@ -24,7 +25,7 @@ func createBuildDir() error {
 	var err error
 	err = nil
 
-	buildPath := filepath.Join(C.Get("", "buildpath"))
+	buildPath := filepath.Join(C.Get(runtime.GOOS, "buildpath"))
 	if !com.PathExist(buildPath) {
 		err = com.Mkdir(buildPath)
 	}

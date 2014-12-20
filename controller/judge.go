@@ -61,5 +61,4 @@ func (this *TaskAddController) Tcp(data map[string]interface{}, cli *core.Client
 		"msg":    "response for task",
 	})
 	cli.Write(result)
-	cli.Close()
 }
