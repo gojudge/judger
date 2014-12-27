@@ -29,6 +29,7 @@ func (this *LoginController) Tcp(data map[string]interface{}, cli *core.Client) 
 		cli.Login(true)
 		result, _ := com.JsonEncode(map[string]interface{}{
 			"result": true, //bool, login result
+			"sid":    com.CreateGUID(),
 			"os":     runtime.GOOS + " " + runtime.GOARCH,
 			"language": map[string]interface{}{ //language:compiler
 				"C":    "gcc",
@@ -58,7 +59,7 @@ func (this *TaskAddController) Tcp(data map[string]interface{}, cli *core.Client
 
 	result, _ := com.JsonEncode(map[string]interface{}{
 		"result": true, //bool, login result
-		"msg":    "response for task",
+		"msg":    "task added",
 	})
 	cli.Write(result)
 }
