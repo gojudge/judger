@@ -37,6 +37,11 @@ func clientRun(conn net.Conn) {
 	conn.Write(msg2)
 
 	read(conn)
+
+	msg3, _ := com.ReadFileByte("info.json")
+	conn.Write(msg3)
+
+	read(conn)
 }
 
 func read(conn net.Conn) {
