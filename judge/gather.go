@@ -55,9 +55,9 @@ func (this *Info) getResult(file string) int {
 		content := com.ReadFile(path)
 		content = com.Strim(content)
 		if result, err := strconv.Atoi(content); err != nil {
-			return result
-		} else {
 			return -1
+		} else {
+			return result
 		}
 	} else {
 		return -1
