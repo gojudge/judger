@@ -8,7 +8,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.0.3"
+#define VERSION "1.1.0"
 
 pid_t child;
 long begin_time;
@@ -16,6 +16,7 @@ char *executable = NULL;
 int EXE_LEN = 1024;
 int fd = 0;
 char *config_path = NULL;
+int judger_model = 2;			//default model - assert
 
 enum ecode {
 	PEN,						// Exit Normally
@@ -51,27 +52,50 @@ long t_now()
 	return tmp_now;
 }
 
+/* record content into file */
+void record_result(const char *content)
+{
+	FILE *stream;
+	if ((stream = fopen("RUNRESULT", "w")) == NULL) {
+		fprintf(stderr, "Cannot open output file.\n");
+	}
+	char *s = (char *)malloc(sizeof(char) * 10);
+	memset(s, 0, sizeof(char) * 10);
+	strncpy(s, content, sizeof(char) * 10);
+	s[10] = 0;
+
+	fwrite(s, sizeof(char) * 10, 1, stream);
+	fclose(stream);
+}
+
 /* process exit */
 void pexit(enum ecode EC)
 {
 	if (EC == PEN) {
 		// Ignore
+		record_result("PEN");
 	} else if (EC == POT) {
 		printf("Out of Time.\n");
+		record_result("POT");
 		kill(child, SIGKILL);
 	} else if (EC == PSF) {
 		printf("Syscall Forbidden.\n");
+		record_result("PSF");
 		kill(child, SIGKILL);
 	} else if (EC == POM) {
 		printf("Out of Memory.\n");
+		record_result("POM");
 		kill(child, SIGKILL);
 	} else if (EC == PRE) {
 		printf("Runtime Error.\n");
+		record_result("PRE");
 	} else if (EC == POL) {
 		printf("Output Limit Exceed.\n");
+		record_result("POL");
 		kill(child, SIGKILL);
 	} else {
 		dprintf(fd, "EC [%d]\n", EC);
+		record_result("EC unk");
 	}
 
 	close(fd);
@@ -162,6 +186,14 @@ void parse_args(int argc, char *argv[])
 				memset(config_path, 0, sizeof(char) * EXE_LEN);
 				strncpy(config_path, tag_value, len);
 				config_path[len] = 0;
+			} else if (!strcmp(tag_name, "j")) {
+				dprintf(fd, "[judger model] %s\n", tag_value);
+
+				if (!strcmp(tag_value, "io")) {
+					judger_model = 1;
+				} else {
+					judger_model = 2;
+				}
 			}
 
 		} else {				// executable path, just one
@@ -174,6 +206,17 @@ void parse_args(int argc, char *argv[])
 	}
 
 	return;
+}
+
+/* check file exist */
+int file_exist(const char *filepath)
+{
+	if (access(filepath, F_OK) == -1) {
+		// File not exists
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -195,6 +238,7 @@ int main(int argc, char *argv[])
 			   "  \033[0;33m-t=time\033[0m     program max time\n"
 			   "  \033[0;33m-m=mem\033[0m      program max memory\n"
 			   "  \033[0;33m-c=path\033[0m     config file path\n"
+			   "  \033[0;33m-j=model\033[0m    judger model[io/assert]\n"
 			   "\033[0;32mversion " VERSION "\033[0m\n");
 		return 0;
 	} else {
@@ -217,6 +261,15 @@ int main(int argc, char *argv[])
 	child = fork();
 	if (child == 0) {
 		int exec_result = 0;
+
+		if (judger_model == 1) {
+			if (file_exist("stdin") == -1) {
+				dprintf(fd, "[Warning] \"stdin\" file does not exist!\n");
+			}
+			//Redirect the standard input / output stream
+			freopen("stdin", "r", stdin);
+			freopen("stdout", "w", stdout);
+		}
 
 		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 
