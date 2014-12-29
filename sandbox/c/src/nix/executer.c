@@ -64,7 +64,7 @@ void record_result(const char *content)
 	strncpy(s, content, sizeof(char) * 10);
 	s[10] = 0;
 
-	fwrite(s, sizeof(char) * 10, 1, stream);
+	fwrite(s, sizeof(char) * strlen(s), 1, stream);
 	fclose(stream);
 }
 
