@@ -13,7 +13,7 @@ type Info struct {
 	buildLog    string
 	buildResult int
 	runLog      string
-	runResult   int
+	runResult   string
 	buildPath   string
 }
 
@@ -25,10 +25,10 @@ func (this *Info) Gather(sid string, id int, buildPath string) map[string]interf
 	this.buildLog = this.getLog("BUILD.LOG")
 	if this.buildResult = this.getResult("BUILDRESULT"); this.buildResult == 0 {
 		this.runLog = this.getLog("RUN.LOG")
-		this.runResult = this.getResult("RUNRESULT")
+		this.runResult = this.getLog("RUNRESULT")
 	} else {
 		this.runLog = ""
-		this.runResult = -1
+		this.runResult = "EC"
 	}
 
 	return map[string]interface{}{
