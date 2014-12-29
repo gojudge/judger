@@ -8,7 +8,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.0.3"
+#define VERSION "1.0.4"
 
 pid_t child;
 long begin_time;
@@ -51,27 +51,50 @@ long t_now()
 	return tmp_now;
 }
 
+/* record content into file */
+void record_result(const char *content)
+{
+	FILE *stream;
+	if ((stream = fopen("RUNRESULT", "w")) == NULL) {
+		fprintf(stderr, "Cannot open output file.\n");
+	}
+	char *s = (char *)malloc(sizeof(char) * 10);
+	memset(s, 0, sizeof(char) * 10);
+	strncpy(s, content, sizeof(char) * 10);
+	s[10] = 0;
+
+	fwrite(s, sizeof(char) * 10, 1, stream);
+	fclose(stream);
+}
+
 /* process exit */
 void pexit(enum ecode EC)
 {
 	if (EC == PEN) {
 		// Ignore
+		record_result("PEN");
 	} else if (EC == POT) {
 		printf("Out of Time.\n");
+		record_result("POT");
 		kill(child, SIGKILL);
 	} else if (EC == PSF) {
 		printf("Syscall Forbidden.\n");
+		record_result("PSF");
 		kill(child, SIGKILL);
 	} else if (EC == POM) {
 		printf("Out of Memory.\n");
+		record_result("POM");
 		kill(child, SIGKILL);
 	} else if (EC == PRE) {
 		printf("Runtime Error.\n");
+		record_result("PRE");
 	} else if (EC == POL) {
 		printf("Output Limit Exceed.\n");
+		record_result("POL");
 		kill(child, SIGKILL);
 	} else {
 		dprintf(fd, "EC [%d]\n", EC);
+		record_result("EC unk");
 	}
 
 	close(fd);
