@@ -8,7 +8,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.0.4"
+#define VERSION "1.1.0"
 
 pid_t child;
 long begin_time;
@@ -16,6 +16,7 @@ char *executable = NULL;
 int EXE_LEN = 1024;
 int fd = 0;
 char *config_path = NULL;
+int judger_model = 2;			//default model - assert
 
 enum ecode {
 	PEN,						// Exit Normally
@@ -185,6 +186,14 @@ void parse_args(int argc, char *argv[])
 				memset(config_path, 0, sizeof(char) * EXE_LEN);
 				strncpy(config_path, tag_value, len);
 				config_path[len] = 0;
+			} else if (!strcmp(tag_name, "j")) {
+				dprintf(fd, "[judger model] %s\n", tag_value);
+
+				if (!strcmp(tag_value, "io")) {
+					judger_model = 1;
+				} else {
+					judger_model = 2;
+				}
 			}
 
 		} else {				// executable path, just one
@@ -197,6 +206,17 @@ void parse_args(int argc, char *argv[])
 	}
 
 	return;
+}
+
+/* check file exist */
+int file_exist(const char *filepath)
+{
+	if (access(filepath, F_OK) == -1) {
+		// File not exists
+		return -1;
+	} else {
+		return 0;
+	}
 }
 
 int main(int argc, char *argv[])
@@ -218,6 +238,7 @@ int main(int argc, char *argv[])
 			   "  \033[0;33m-t=time\033[0m     program max time\n"
 			   "  \033[0;33m-m=mem\033[0m      program max memory\n"
 			   "  \033[0;33m-c=path\033[0m     config file path\n"
+			   "  \033[0;33m-j=model\033[0m    judger model[io/assert]\n"
 			   "\033[0;32mversion " VERSION "\033[0m\n");
 		return 0;
 	} else {
@@ -240,6 +261,15 @@ int main(int argc, char *argv[])
 	child = fork();
 	if (child == 0) {
 		int exec_result = 0;
+
+		if (judger_model == 1) {
+			if (file_exist("stdin") == -1) {
+				dprintf(fd, "[Warning] \"stdin\" file does not exist!\n");
+			}
+			//Redirect the standard input / output stream
+			freopen("stdin", "r", stdin);
+			freopen("stdout", "w", stdout);
+		}
 
 		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
 

@@ -26,6 +26,7 @@ extern int allow_syscall[];		// allow syscall list
 extern int fd;					// debug log file
 extern char *executable;		// executable path
 extern int EXE_LEN;				// executable path length
+extern int judger_model;		// judger model
 
 char *read_config(const char *filename);
 void parse_config_json(char *text);
