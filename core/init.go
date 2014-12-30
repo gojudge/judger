@@ -20,6 +20,12 @@ func Judger() {
 	dataPath := "/data.db"
 
 	if Mode == "docker" {
+		log.Blueln("[mode]", "docker")
+
+		if !com.FileExist("/data") {
+			com.Mkdir("/data")
+		}
+
 		com.CopyFile("conf/config_docker.ini", "/data/config_docker.ini")
 		com.CopyFile("sandbox/c/build/executer.ini", "/data/executer.json")
 		dataPath = "/data/data.db"
