@@ -3,6 +3,7 @@ package judge
 import (
 	"fmt"
 	"github.com/gogather/com"
+	"github.com/gogather/com/log"
 	"path/filepath"
 	"strconv"
 )
@@ -12,7 +13,6 @@ type Info struct {
 	id          int
 	buildLog    string
 	buildResult int
-	runLog      string
 	runResult   string
 	buildPath   string
 }
@@ -23,18 +23,16 @@ func (this *Info) Gather(sid string, id int, buildPath string) map[string]interf
 	this.buildPath = buildPath
 
 	this.buildLog = this.getLog("BUILD.LOG")
+
 	if this.buildResult = this.getResult("BUILDRESULT"); this.buildResult == 0 {
-		this.runLog = this.getLog("RUN.LOG")
 		this.runResult = this.getLog("RUNRESULT")
 	} else {
-		this.runLog = ""
 		this.runResult = "EC"
 	}
 
 	return map[string]interface{}{
 		"build_log":    this.buildLog,
 		"build_result": this.buildResult,
-		"run_log":      this.runLog,
 		"run_result":   this.runResult,
 	}
 }
@@ -55,6 +53,7 @@ func (this *Info) getResult(file string) int {
 		content := com.ReadFile(path)
 		content = com.Strim(content)
 		if result, err := strconv.Atoi(content); err != nil {
+			log.Warnln(err)
 			return -1
 		} else {
 			return result

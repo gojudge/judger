@@ -13,6 +13,8 @@ func Judger() {
 	C = &Config{}
 	C.NewConfig("conf/config.ini")
 
+	GenScript()
+
 	DB = &Sqlite{}
 	DB.NewSqlite()
 
