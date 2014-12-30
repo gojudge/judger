@@ -11,12 +11,27 @@ import (
 
 var DB *Sqlite
 var C *Config
+var Mode string
+var configFile string
 
 func Judger() {
-	var configFile string
+	parseArg()
 
-	if configFile = parseConf(); configFile == "" {
+	dataPath := "/data.db"
+
+	if Mode == "docker" {
+		com.CopyFile("conf/config_docker.ini", "/data/config_docker.ini")
+		com.CopyFile("sandbox/c/build/executer.ini", "/data/executer.json")
+		dataPath = "/data/data.db"
+	}
+
+	if configFile == "" {
 		configFile = "conf/config.ini"
+	}
+
+	if !com.FileExist(configFile) {
+		log.Dangerln("[Error]", configFile, "does not exist!")
+		os.Exit(-1)
 	}
 
 	log.Blueln("[config]")
@@ -27,8 +42,10 @@ func Judger() {
 
 	GenScript()
 
+	log.Blueln("[data]")
+	log.Blueln(dataPath)
 	DB = &Sqlite{}
-	DB.NewSqlite()
+	DB.NewSqlite(dataPath)
 
 	createBuildDir()
 
@@ -47,7 +64,10 @@ func createBuildDir() error {
 	return err
 }
 
-func parseConf() string {
+func parseArg() {
+	configFile = ""
+	Mode = ""
+
 	arg_num := len(os.Args)
 
 	for i := 0; i < arg_num; i++ {
@@ -58,10 +78,11 @@ func parseConf() string {
 			arr := strings.Split(s, "=")
 
 			if arr[0] == "c" {
-				return arr[1]
+				configFile = arr[1]
+			} else if arr[0] == "mode" {
+				Mode = arr[1]
 			}
 		}
 	}
 
-	return ""
 }

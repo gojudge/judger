@@ -17,11 +17,6 @@ RUN go get
 RUN go build
 RUN mkdir build
 
-# prepare data and config
-RUN mkdir /data
-ADD ./sandbox/c/build/executer.json /data/executer.json
-ADD ./conf/config_docker.ini /data/config_docker.ini
-
 EXPOSE 1004 1005
 ENTRYPOINT []
-CMD ["./judger","-c=/data/config_docker.ini"]
+CMD ["./judger","-c=/data/config_docker.ini","-mode=docker"]

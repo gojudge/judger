@@ -13,9 +13,9 @@ type Sqlite struct {
 	db       *sql.DB
 }
 
-func (this *Sqlite) NewSqlite() {
+func (this *Sqlite) NewSqlite(dataPath string) {
 	var err error
-	this.Filename = `data.db`
+	this.Filename = dataPath
 
 	this.db, err = sql.Open("sqlite3", filename)
 	if err != nil {
