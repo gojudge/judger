@@ -17,6 +17,9 @@ RUN go get
 RUN go build
 RUN mkdir build
 
+ADD /gopath/src/github.com/duguying/judger/sandbox/c/build/executer.json /data/executer.json
+ADD /gopath/src/github.com/duguying/judger/conf/config_docker.ini /data/config_docker.ini
+
 EXPOSE 1004 1005
 ENTRYPOINT []
-CMD ["./judger"]
+CMD ["./judger -c=/data/config_docker.ini"]
