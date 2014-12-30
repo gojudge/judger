@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"path/filepath"
 )
-
-var filename string
 
 type Sqlite struct {
 	Filename string
@@ -15,9 +14,9 @@ type Sqlite struct {
 
 func (this *Sqlite) NewSqlite(dataPath string) {
 	var err error
-	this.Filename = dataPath
+	this.Filename = filepath.Join(dataPath)
 
-	this.db, err = sql.Open("sqlite3", filename)
+	this.db, err = sql.Open("sqlite3", this.Filename)
 	if err != nil {
 		fmt.Println(err)
 		return

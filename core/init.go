@@ -17,17 +17,21 @@ var configFile string
 func Judger() {
 	parseArg()
 
-	dataPath := "/data.db"
+	dataPath := "data.db"
 
 	if Mode == "docker" {
 		log.Blueln("[mode]", "docker")
 
 		if !com.FileExist("/data") {
-			com.Mkdir("/data")
+			if err := com.Mkdir("/data"); err != nil {
+				log.Warnln("[Warn]", "create dir /data failed")
+			} else {
+				log.Blueln("[info]", "create dir /data")
+			}
 		}
 
-		com.CopyFile("conf/config_docker.ini", "/data/config_docker.ini")
-		com.CopyFile("sandbox/c/build/executer.ini", "/data/executer.json")
+		com.CopyFile("/data/config_docker.ini", "conf/config_docker.ini")
+		com.CopyFile("/data/executer.json", "sandbox/c/build/executer.json")
 		dataPath = "/data/data.db"
 	}
 
