@@ -22,4 +22,4 @@ ADD ./conf/config_docker.ini /data/config_docker.ini
 
 EXPOSE 1004 1005
 ENTRYPOINT []
-CMD ["./judger -c=/data/config_docker.ini"]
+CMD ["./judger","-c=/data/config_docker.ini"]
