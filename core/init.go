@@ -30,8 +30,14 @@ func Judger() {
 			}
 		}
 
-		com.CopyFile("/data/config_docker.ini", "conf/config_docker.ini")
-		com.CopyFile("/data/executer.json", "sandbox/c/build/executer.json")
+		if !com.FileExist("/data/config_docker.ini") {
+			com.CopyFile("/data/config_docker.ini", "conf/config_docker.ini")
+		}
+
+		if !com.FileExist("/data/executer.json") {
+			com.CopyFile("/data/executer.json", "sandbox/c/build/executer.json")
+		}
+
 		dataPath = "/data/data.db"
 	}
 
