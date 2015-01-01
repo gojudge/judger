@@ -14,7 +14,7 @@ func GenScript() {
 %s %%1 1> BUILD.LOG 2>&1
 echo %%ERRORLEVEL%% > BUILDRESULT`
 
-	gccNix := `%s $1 > BUILD.LOG
+	gccNix := `%s $1 1> BUILD.LOG 2>&1
 echo $? > BUILDRESULT`
 
 	var gccScript string
