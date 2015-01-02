@@ -16,6 +16,7 @@ elseif(WIN32)
 	add_definitions("-D_CRT_SECURE_NO_DEPRECATE" "-D_DEBUG")
 	set(SRC_LIST 
 		  src/win/executer.c
+		  src/win/utils.c
 		  deps/cJSON.c
 		  )
 endif(UNIX)

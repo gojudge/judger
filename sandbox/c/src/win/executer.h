@@ -8,3 +8,7 @@
 #include <psapi.h>
 
 #pragma comment(lib, "psapi.lib")
+
+FILE* dopen(const char* filename);
+void dprintf(FILE* fd, const char *format,...);
+void dclose(FILE* fd);
