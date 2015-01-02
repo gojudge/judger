@@ -17,7 +17,10 @@ void ProcessExit(const char* exit_mark){
     fprintf(run_result, "%s", exit_mark);
     fclose(run_result);
 
-    printf("[%s]", exit_mark);
+    if (1 != judger_model){
+        printf("[%s]", exit_mark);
+    }
+    
     dprintf(fd, "Process Exited! [%s]\n", exit_mark);
     exit(0);
 }
@@ -136,7 +139,7 @@ int main(int argc, char ** argv){
     }
 
     if(!CreateProcess(NULL, executable, NULL, NULL, FALSE,
-        DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi)){
+        CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)){
             printf( "CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
     }else{
