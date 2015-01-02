@@ -1,3 +1,10 @@
+/**
+ * File Name: utils.c
+ * Author: rex
+ * Mail: duguying2008@gmail.com 
+ * Created Time: 2015年1月2日 星期五 20时54分12秒
+ */
+
 #include "executer.h"   
 
 FILE* dopen(const char* filename){

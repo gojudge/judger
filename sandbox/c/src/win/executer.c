@@ -1,3 +1,10 @@
+/**
+ * File Name: executer.c
+ * Author: rex
+ * Mail: duguying2008@gmail.com 
+ * Created Time: 2015年1月2日 星期五 20时54分12秒
+ */
+
 #include "executer.h"
 
 size_t PATH_LEN = 1024;
@@ -100,9 +107,16 @@ void parse_args(int argc, char *argv[]){
 
         } else {                // executable path, just one
             int len = strlen(argv[i]);
-            memset(executable, 0, PATH_LEN);
-            strncpy(executable, argv[i], len);
-            executable[len] = 0;
+
+            // empty string will cause err, filted
+            if (len >= 2){
+                memset(executable, 0, PATH_LEN);
+                strncpy(executable, argv[i], len);
+                executable[len] = 0;
+
+                dprintf(fd, "[executable] %s\n", executable);
+            }
+            
         }
 
     }
@@ -140,7 +154,8 @@ int main(int argc, char ** argv){
 
     if(!CreateProcess(NULL, executable, NULL, NULL, FALSE,
         CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)){
-            printf( "CreateProcess failed (%d).\n", GetLastError());
+            dprintf(fd, "CreateProcess [%s] failed (%d).\n", executable, GetLastError());
+            printf("CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
     }else{
         dprintf(fd, "Process [%s] Created.\n", executable);
