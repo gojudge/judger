@@ -8,15 +8,17 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.1.0"
+#define VERSION "1.1.1"
 
 pid_t child;
 long begin_time;
 char *executable = NULL;
-int EXE_LEN = 1024;
+size_t PATH_LEN = 1024;
 int fd = 0;
 char *config_path = NULL;
 int judger_model = 2;			//default model - assert
+char *input = NULL;
+char *output = NULL;
 
 enum ecode {
 	PEN,						// Exit Normally
@@ -183,7 +185,7 @@ void parse_args(int argc, char *argv[])
 				}
 			} else if (!strcmp(tag_name, "c")) {
 				len = strlen(tag_value);
-				memset(config_path, 0, sizeof(char) * EXE_LEN);
+				memset(config_path, 0, PATH_LEN);
 				strncpy(config_path, tag_value, len);
 				config_path[len] = 0;
 			} else if (!strcmp(tag_name, "j")) {
@@ -194,11 +196,25 @@ void parse_args(int argc, char *argv[])
 				} else {
 					judger_model = 2;
 				}
+			} else if (!strcmp(tag_name, "-stdin")) {
+				dprintf(fd, "[input] %s\n", tag_value);
+
+				len = strlen(tag_value);
+				memset(input, 0, PATH_LEN);
+				strncpy(input, tag_value, len);
+				input[len] = 0;
+			} else if (!strcmp(tag_name, "-stdout")) {
+				dprintf(fd, "[output] %s\n", tag_value);
+
+				len = strlen(tag_value);
+				memset(output, 0, PATH_LEN);
+				strncpy(output, tag_value, len);
+				input[len] = 0;
 			}
 
 		} else {				// executable path, just one
 			int len = strlen(argv[i]);
-			memset(executable, 0, sizeof(char) * EXE_LEN);
+			memset(executable, 0, PATH_LEN);
 			strncpy(executable, argv[i], len);
 			executable[len] = 0;
 		}
@@ -224,21 +240,44 @@ int main(int argc, char *argv[])
 	long orig_eax;
 
 	// alloc memory for path string
-	executable = (char *)malloc(sizeof(char) * EXE_LEN);
-	memset(executable, 0, sizeof(char) * EXE_LEN);
+	executable = (char *)malloc(PATH_LEN);
+	memset(executable, 0, PATH_LEN);
 
 	// alloc memory for config path string
-	config_path = (char *)malloc(sizeof(char) * EXE_LEN);
-	memset(config_path, 0, sizeof(char) * EXE_LEN);
+	config_path = (char *)malloc(PATH_LEN);
+	memset(config_path, 0, PATH_LEN);
 
+	// alloc stdin/stdout file path
+	input = (char *)malloc(PATH_LEN);
+	memset(input, 0, PATH_LEN);
+
+	output = (char *)malloc(PATH_LEN);
+	memset(output, 0, PATH_LEN);
+
+	// set stdin/stdout default filename
+	char *tmp_input = "stdin";
+	char *tmp_output = "stdout";
+
+	size_t len_input = strlen(tmp_input);
+	size_t len_output = strlen(tmp_output);
+
+	strncpy(input, tmp_input, len_input);
+	strncpy(output, tmp_output, len_output);
+
+	input[len_input] = 0;
+	output[len_output] = 0;
+
+	// show help
 	if (argc < 2) {
 		printf("\033[0;39;1mSandbox for Linux Native\033[0m\n"
 			   "Usage: executer <option> <command>\n"
 			   "option:\n"
-			   "  \033[0;33m-t=time\033[0m     program max time\n"
-			   "  \033[0;33m-m=mem\033[0m      program max memory\n"
-			   "  \033[0;33m-c=path\033[0m     config file path\n"
-			   "  \033[0;33m-j=model\033[0m    judger model[io/assert]\n"
+			   "  \033[0;33m-t=time\033[0m          program max time\n"
+			   "  \033[0;33m-m=mem\033[0m           program max memory\n"
+			   "  \033[0;33m-c=path\033[0m          config file path\n"
+			   "  \033[0;33m-j=model\033[0m         judger model[io/assert]\n"
+			   "  \033[0;33m--stdin=path\033[0m     stdin file path\n"
+			   "  \033[0;33m--stdout=path\033[0m    stdout file path\n"
 			   "\033[0;32mversion " VERSION "\033[0m\n");
 		return 0;
 	} else {
@@ -255,7 +294,7 @@ int main(int argc, char *argv[])
 		char *config_string = read_config(config_path);
 		parse_config_json(config_string);
 		free_config_buffer(config_string);
-
+		free(config_path);
 	}
 
 	child = fork();
@@ -263,12 +302,16 @@ int main(int argc, char *argv[])
 		int exec_result = 0;
 
 		if (judger_model == 1) {
+			//Redirect the standard input / output stream
 			if (file_exist("stdin") == -1) {
 				dprintf(fd, "[Warning] \"stdin\" file does not exist!\n");
 			}
-			//Redirect the standard input / output stream
-			freopen("stdin", "r", stdin);
-			freopen("stdout", "w", stdout);
+
+			freopen(input, "r", stdin);
+			freopen(output, "w", stdout);
+
+			free(input);
+			free(output);
 		}
 
 		ptrace(PTRACE_TRACEME, 0, NULL, NULL);
@@ -278,6 +321,8 @@ int main(int argc, char *argv[])
 		if (-1 == exec_result) {
 			printf("execute [%s] failed!", executable);
 		}
+
+		free(executable);
 
 		exit(0);
 	} else {

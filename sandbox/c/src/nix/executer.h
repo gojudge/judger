@@ -25,7 +25,7 @@ extern int array_len;			// syscall list length
 extern int allow_syscall[];		// allow syscall list
 extern int fd;					// debug log file
 extern char *executable;		// executable path
-extern int EXE_LEN;				// executable path length
+extern size_t PATH_LEN;			// file path length
 extern int judger_model;		// judger model
 
 char *read_config(const char *filename);
