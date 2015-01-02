@@ -1,9 +1,22 @@
 #include "executer.h"
   
 #define MAX_PARAM_LEN       4096  
-  
-int main( int argc, char ** argv )  
-{  
+
+void GetMemory(HANDLE hProcess){
+    PROCESS_MEMORY_COUNTERS pmc;  
+    GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc));  
+
+    printf("%d\n", pmc.PeakWorkingSetSize/1024);  
+    printf("%d\n", pmc.WorkingSetSize/1024);  
+    printf("%d\n", pmc.QuotaPeakPagedPoolUsage/1024);  
+    printf("%d\n", pmc.QuotaPagedPoolUsage/1024);  
+    printf("%d\n", pmc.QuotaPeakNonPagedPoolUsage/1024);  
+    printf("%d\n", pmc.QuotaNonPagedPoolUsage/1024);  
+    printf("%d\n", pmc.PeakPagefileUsage/1024);  
+    printf("%d\n", pmc.PagefileUsage/1024);  
+}
+
+int main( int argc, char ** argv ){
     int i, j = 0, len;  
     char command_buf[MAX_PARAM_LEN];  
   
@@ -39,41 +52,43 @@ int main( int argc, char ** argv )
     }  
   
     while (TRUE) {  
-        WaitForDebugEvent (&de, INFINITE);  
+        WaitForDebugEvent (&de, INFINITE); 
+
+        GetMemory(pi.hProcess); 
   
         switch (de.dwDebugEventCode) {  
-        case EXCEPTION_DEBUG_EVENT:         /* exception */  
-            switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
-            case   EXCEPTION_INT_DIVIDE_BY_ZERO:    /* #DE */  
-                // Do what the parent process want to do when the child process gets #DE interrupt.  
-                TerminateProcess(pi.hProcess,1);   
-                break;   
-            case   EXCEPTION_BREAKPOINT:            /* #BP */  
-                // Do what the parent process want to do when the child process gets #BP interrupt.  
+            case EXCEPTION_DEBUG_EVENT:         /* exception */  
+                switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
+                case   EXCEPTION_INT_DIVIDE_BY_ZERO:    /* #DE */  
+                    // Do what the parent process want to do when the child process gets #DE interrupt.  
+                    TerminateProcess(pi.hProcess,1);
+                    break;   
+                case   EXCEPTION_BREAKPOINT:            /* #BP */  
+                    // Do what the parent process want to do when the child process gets #BP interrupt.  
+                    break;  
+      
+                default:   
+                    // printf("Unknown Exception\n"); 
+                    break;  
+                }      
+      
+                ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);  
+                continue;  
+      
+            case CREATE_PROCESS_DEBUG_EVENT:        /* child process created */  
+      
+                // Do what the parent process want to do when the child process was created.  
                 break;  
-  
-            default:   
-                printf("Unknown Exception\n");   
+      
+            case EXIT_PROCESS_DEBUG_EVENT:          /* child process exits */  
+                stop = TRUE;  
+      
+                // Do what the parent process want to do when the child process exits.  
                 break;  
-            }      
-  
-            ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);  
-            continue;  
-  
-        case CREATE_PROCESS_DEBUG_EVENT:        /* child process created */  
-  
-            // Do what the parent process want to do when the child process was created.  
-            break;  
-  
-        case EXIT_PROCESS_DEBUG_EVENT:          /* child process exits */  
-            stop = TRUE;  
-  
-            // Do what the parent process want to do when the child process exits.  
-            break;  
-  
-        default:  
-            printf("Unknown Event!\n");  
-            break;  
+      
+            default:  
+                // printf("Unknown Event!\n");  
+                break;  
         }  
   
         if (TRUE == stop) {  
