@@ -2,8 +2,10 @@ language: go
 go:
   - 1.3
   - tip
+install:
+  - go get
 script:
-    - go build
-    - cd sandbox/c/build
-    - cmake ..
-    - make
+  - go build
+  - cd sandbox/c/build
+  - cmake ..
+  - make
