@@ -1,6 +1,4 @@
 #include "executer.h"
-  
-#define MAX_PARAM_LEN       4096
 
 size_t PATH_LEN = 1024;
 long max_time;           // max time
@@ -11,16 +9,33 @@ char* output = NULL;     // output file path
 char* executable = NULL; // executable path
 FILE* fd = NULL;         // debug file
 
-void GetMemory(HANDLE hProcess){
+/** Process Exit */
+void ProcessExit(const char* exit_mark){
+    FILE* run_result = NULL;
+
+    run_result = fopen("RUNRESULT", "w");
+    fprintf(run_result, "%s", exit_mark);
+    fclose(run_result);
+
+    printf("[%s]", exit_mark);
+    dprintf(fd, "Process Exited! [%s]\n", exit_mark);
+    exit(0);
+}
+
+/** Check Memory */
+void CheckMemory(HANDLE hProcess){
     PROCESS_MEMORY_COUNTERS pmc;
     int mem = 0;
 
     GetProcessMemoryInfo(hProcess, &pmc, sizeof(pmc));  
     mem = pmc.PagefileUsage/1024;
      
-    printf("%d\n", mem);  
+    if (max_mem < mem){
+        ProcessExit("POM");
+    }
 }
 
+/** Parse Command Args */
 void parse_args(int argc, char *argv[]){
     int i = 0;
     int len = 0;
@@ -44,6 +59,7 @@ void parse_args(int argc, char *argv[]){
                 int tmp_time = atoi(tag_value);
                 if (tmp_time > 0) {
                     max_time = tmp_time;
+                    dprintf(fd,"[max time] %d\n", max_time);
                 } else {
                     dprintf(fd, "invalid time [%d], use default.\n", tmp_time);
                 }
@@ -51,6 +67,7 @@ void parse_args(int argc, char *argv[]){
                 int tmp_mem = atoi(tag_value);
                 if (tmp_mem > 0) {
                     max_mem = tmp_mem;
+                    dprintf(fd,"[max memory] %d\n", max_mem);
                 } else {
                     dprintf(fd, "invalid memory [%d], use default.\n", tmp_mem);
                 }
@@ -129,26 +146,27 @@ int main(int argc, char ** argv){
     while (TRUE) {  
         WaitForDebugEvent (&de, INFINITE); 
 
-        GetMemory(pi.hProcess); 
+        CheckMemory(pi.hProcess); 
   
         switch (de.dwDebugEventCode) {  
             case EXCEPTION_DEBUG_EVENT:         /* exception */  
                 switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
-                case   EXCEPTION_INT_DIVIDE_BY_ZERO:    /* #DE */  
-                    // Do what the parent process want to do when the child process gets #DE interrupt.  
-                    TerminateProcess(pi.hProcess,1);
-                    break;   
-                case   EXCEPTION_BREAKPOINT:            /* #BP */  
-                    // Do what the parent process want to do when the child process gets #BP interrupt.  
-                    break;  
-      
-                default:   
-                    // printf("Unknown Exception\n"); 
-                    break;  
+                    case   EXCEPTION_INT_DIVIDE_BY_ZERO:    /* #DE */  
+                        // Do what the parent process want to do when the child process gets #DE interrupt.  
+                        ProcessExit("PRE");
+                        break;
+                    case   EXCEPTION_BREAKPOINT:            /* #BP */  
+                        // Do what the parent process want to do when the child process gets #BP interrupt.  
+                        break;
+          
+                    default:   
+                        // printf("Unknown Exception\n"); 
+                        ProcessExit("PRE");
+                        break;
                 }      
       
                 ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
-                continue;  
+                continue;
       
             case CREATE_PROCESS_DEBUG_EVENT:        /* child process created */
       
@@ -168,6 +186,7 @@ int main(int argc, char ** argv){
   
         if (TRUE == stop) {  
             //printf("Process exit\n");
+            ProcessExit("PEN");
             break;
         }  
   
