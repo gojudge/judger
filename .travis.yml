@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.3
+  - tip
+script:
+    - go build
+    - cd sandbox/c/build
+    - cmake ..
+    - make
