@@ -13,7 +13,7 @@ if(UNIX)
       src/nix/test.cpp
       )
 elseif(WIN32)
-	add_definitions("-D_CRT_SECURE_NO_DEPRECATE" "-D_DEBUG")
+	add_definitions("-D_CRT_SECURE_NO_DEPRECATE" "-D_DEBUG" "/wd 4819")
 	set(SRC_LIST 
 		  src/win/executer.c
 		  src/win/utils.c
