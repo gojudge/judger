@@ -17,10 +17,25 @@ char* input = NULL;      // input file path
 char* output = NULL;     // output file path
 char* executable = NULL; // executable path
 FILE* fd = NULL;         // debug file
+DWORD pid;               // process id
+
+/** kill process by pid */
+BOOL KillProcess(DWORD ProcessId){
+    HANDLE hProcess=OpenProcess(PROCESS_TERMINATE,FALSE,ProcessId);
+    if(hProcess==NULL)
+        return FALSE;
+    if(!TerminateProcess(hProcess,0))
+        return FALSE;
+    return TRUE;
+}
 
 /** Process Exit */
 void ProcessExit(const char* exit_mark){
     FILE* run_result = NULL;
+
+    if (!KillProcess(pid)){
+        return;
+    }
 
     run_result = fopen("RUNRESULT", "w");
     fprintf(run_result, "%s", exit_mark);
@@ -47,6 +62,7 @@ void CheckMemory(HANDLE hProcess){
     }
 }
 
+/** get current time */
 int CurrentTime(){
     SYSTEMTIME t;
     int millisec = 0;
@@ -142,7 +158,7 @@ int main(int argc, char ** argv){
     BOOL stop = FALSE;
     int StartTime = 0;
 
-    // zero memory for process info, etc
+    ZeroMemory(&de, sizeof(de));
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
@@ -160,10 +176,14 @@ int main(int argc, char ** argv){
 
     // show help
     if (argc<2) {
+        printf("Unsafely Executer for Windows\n");
         printf("Usage: %s [arguments ...] <app_name>\n", argv[0]);
         printf("Options:\n"
-               "  -m=mem        max memory\n"
-               "  -t=time       max time\n"
+               "  -m=mem          max memory\n"
+               "  -t=time         max time\n"
+               "  -j=mode         mode[io/assert]\n"
+               "  --stdin=path    stdin file path\n"
+               "  --stdout=path   stdout file path\n"
                "Version " VERSION "\n"
             );
         return 0;
@@ -177,6 +197,8 @@ int main(int argc, char ** argv){
             printf("CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
     }else{
+        // get process id
+        pid = pi.dwProcessId;
         
         StartTime = CurrentTime();
 
@@ -203,7 +225,11 @@ int main(int argc, char ** argv){
                 ProcessExit("POT");
             }
         }
-  
+        
+        if (de.dwDebugEventCode>0){
+            dprintf(fd, "Trace DebugEventCode [%x]\n", (de.dwDebugEventCode));
+        }
+        
         switch (de.dwDebugEventCode) {  
             case EXCEPTION_DEBUG_EVENT:         /* exception */  
                 switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
@@ -213,6 +239,7 @@ int main(int argc, char ** argv){
                         break;
                     case   EXCEPTION_BREAKPOINT:            /* #BP */  
                         // Do what the parent process want to do when the child process gets #BP interrupt.  
+                        ProcessExit("PBP");
                         break;
           
                     default:   
@@ -224,19 +251,35 @@ int main(int argc, char ** argv){
                 ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
                 continue;
       
-            case CREATE_PROCESS_DEBUG_EVENT:        /* child process created */
-      
-                // Do what the parent process want to do when the child process was created.
+            case CREATE_PROCESS_DEBUG_EVENT:
                 break;
-      
-            case EXIT_PROCESS_DEBUG_EVENT:          /* child process exits */
+
+            case CREATE_THREAD_DEBUG_EVENT:
+                dprintf(fd, "[CREATE_THREAD_DEBUG_EVENT]\n");
+                continue;
+            case EXIT_PROCESS_DEBUG_EVENT:
+                dprintf(fd, "[EXIT_PROCESS_DEBUG_EVENT]\n");
                 stop = TRUE;
-      
-                // Do what the parent process want to do when the child process exits.
                 break;
+            case EXIT_THREAD_DEBUG_EVENT:
+                dprintf(fd, "[EXIT_THREAD_DEBUG_EVENT]\n");
+                continue;
+            case LOAD_DLL_DEBUG_EVENT:
+                dprintf(fd, "[LOAD_DLL_DEBUG_EVENT]\n");
+                continue;
+            case OUTPUT_DEBUG_STRING_EVENT:
+                dprintf(fd, "[OUTPUT_DEBUG_STRING_EVENT]\n");
+                continue;
+            case RIP_EVENT:
+                dprintf(fd, "[RIP_EVENT]\n");
+                continue;
+            case UNLOAD_DLL_DEBUG_EVENT:
+                dprintf(fd, "[UNLOAD_DLL_DEBUG_EVENT]\n");
+                continue;
       
             default:  
                 // printf("Unknown Event!\n");
+                // ProcessExit("PEN");
                 break;
         }  
   
