@@ -7,6 +7,8 @@
 
 #include "executer.h"
 
+#define VERSION "1.0.0"
+
 size_t PATH_LEN = 1024;
 long max_time;           // max time
 int max_mem;             // max memory
@@ -43,6 +45,17 @@ void CheckMemory(HANDLE hProcess){
     if (max_mem < mem){
         ProcessExit("POM");
     }
+}
+
+int CurrentTime(){
+    SYSTEMTIME t;
+    int millisec = 0;
+
+    GetLocalTime(&t);
+    
+    millisec = (t.wHour * 3600 + t.wMinute * 60 + t.wSecond) * 1000 + t.wMilliseconds;
+
+    return millisec;
 }
 
 /** Parse Command Args */
@@ -123,11 +136,12 @@ void parse_args(int argc, char *argv[]){
 }
 
 int main(int argc, char ** argv){
-    STARTUPINFO si;  
-    PROCESS_INFORMATION pi;  
-    DEBUG_EVENT de;  
-    BOOL stop = FALSE;  
-  
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+    DEBUG_EVENT de;
+    BOOL stop = FALSE;
+    int StartTime = 0;
+
     // zero memory for process info, etc
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -146,7 +160,12 @@ int main(int argc, char ** argv){
 
     // show help
     if (argc<2) {
-        printf("Usage: %s <app_name> [arguments ...]\n", argv[0]);
+        printf("Usage: %s [arguments ...] <app_name>\n", argv[0]);
+        printf("Options:\n"
+               "  -m=mem        max memory\n"
+               "  -t=time       max time\n"
+               "Version " VERSION "\n"
+            );
         return 0;
     }else{
         parse_args(argc, argv);
@@ -158,13 +177,32 @@ int main(int argc, char ** argv){
             printf("CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
     }else{
+        
+        StartTime = CurrentTime();
+
         dprintf(fd, "Process [%s] Created.\n", executable);
+        dprintf(fd, "Start Time [%d]\n", StartTime);
+
     }
   
     while (TRUE) {  
+        int ct = 0;
+
         WaitForDebugEvent (&de, INFINITE); 
 
-        CheckMemory(pi.hProcess); 
+        if (max_mem>0){
+            CheckMemory(pi.hProcess);
+        }
+        
+
+        if (max_time > 0){
+            // time check
+            ct = CurrentTime();
+            if (ct - StartTime > max_time){
+                printf("Over Time [%d]\n", ct);
+                ProcessExit("POT");
+            }
+        }
   
         switch (de.dwDebugEventCode) {  
             case EXCEPTION_DEBUG_EVENT:         /* exception */  
