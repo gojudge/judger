@@ -12,3 +12,4 @@
 FILE* dopen(const char* filename);
 void dprintf(FILE* fd, const char *format,...);
 void dclose(FILE* fd);
+CHAR *getLastErrorText(CHAR *pBuf, ULONG bufSize);

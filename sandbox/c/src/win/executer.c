@@ -18,6 +18,10 @@ char* output = NULL;     // output file path
 char* executable = NULL; // executable path
 FILE* fd = NULL;         // debug file
 DWORD pid;               // process id
+int StartTime = 0;       // process start time
+BOOL pot = FALSE;        // process out of time
+BOOL pom = FALSE;        // process out of memory
+
 
 /** kill process by pid */
 BOOL KillProcess(DWORD ProcessId){
@@ -34,6 +38,7 @@ void ProcessExit(const char* exit_mark){
     FILE* run_result = NULL;
 
     if (!KillProcess(pid)){
+        dprintf(fd, "Kill Process Failed!\n");
         return;
     }
 
@@ -41,8 +46,9 @@ void ProcessExit(const char* exit_mark){
     fprintf(run_result, "%s", exit_mark);
     fclose(run_result);
 
+    // for debug
     if (1 != judger_model){
-        printf("[%s]", exit_mark);
+        // printf("[%s]", exit_mark);
     }
     
     dprintf(fd, "Process Exited! [%s]\n", exit_mark);
@@ -58,6 +64,7 @@ void CheckMemory(HANDLE hProcess){
     mem = pmc.PagefileUsage/1024;
      
     if (max_mem < mem){
+        pom = TRUE;
         ProcessExit("POM");
     }
 }
@@ -73,6 +80,23 @@ int CurrentTime(){
 
     return millisec;
 }
+
+void ThreadProc(void* arg){
+    int ct = 0;
+
+    while(TRUE)     
+    {   
+        if (max_time > 0){
+            // time check
+            ct = CurrentTime();
+            if (ct - StartTime > max_time){
+                dprintf(fd, "Over Time [%d]\n", ct);
+                pot = TRUE;
+                ProcessExit("POT");
+            }
+        }
+    }  
+}  
 
 /** Parse Command Args */
 void parse_args(int argc, char *argv[]){
@@ -156,8 +180,7 @@ int main(int argc, char ** argv){
     PROCESS_INFORMATION pi;
     DEBUG_EVENT de;
     BOOL stop = FALSE;
-    int StartTime = 0;
-
+    
     ZeroMemory(&de, sizeof(de));
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
@@ -191,14 +214,16 @@ int main(int argc, char ** argv){
         parse_args(argc, argv);
     }
 
-    SetErrorMode(SEM_NOGPFAULTERRORBOX);
-
     if(!CreateProcess(NULL, executable, NULL, NULL, FALSE,
         DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi)){
             dprintf(fd, "CreateProcess [%s] failed (%d).\n", executable, GetLastError());
             printf("CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
     }else{
+        LPDWORD tid;
+
+        ZeroMemory(&tid, sizeof(tid));
+
         // get process id
         pid = pi.dwProcessId;
         
@@ -207,53 +232,51 @@ int main(int argc, char ** argv){
         dprintf(fd, "Process [%s] Created.\n", executable);
         dprintf(fd, "Start Time [%d]\n", StartTime);
 
+        if (NULL==CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ThreadProc, (LPVOID)NULL, 0, tid)){
+            dprintf(fd, "Created Thread failed\n");
+        }
     }
 
-    while (TRUE) {  
-        int ct = 0;
-
+    while (TRUE) {
         WaitForDebugEvent (&de, INFINITE); 
 
         if (max_mem>0){
             CheckMemory(pi.hProcess);
         }
         
-
-        if (max_time > 0){
-            // time check
-            ct = CurrentTime();
-            if (ct - StartTime > max_time){
-                printf("Over Time [%d]\n", ct);
-                ProcessExit("POT");
-            }
-        }
+        dprintf(fd, "Trace DebugEventCode [%x]\n", (de.dwDebugEventCode));
         
-        if (de.dwDebugEventCode>0){
-            dprintf(fd, "Trace DebugEventCode [%x]\n", (de.dwDebugEventCode));
-        }
-
-        switch (de.dwDebugEventCode) {  
-            case EXCEPTION_DEBUG_EVENT:         /* exception */  
+        switch (de.dwDebugEventCode){
+            case EXCEPTION_DEBUG_EVENT:
                 switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
-                    case   EXCEPTION_INT_DIVIDE_BY_ZERO:    /* #DE */  
-                        // Do what the parent process want to do when the child process gets #DE interrupt.  
+                    case   EXCEPTION_INT_DIVIDE_BY_ZERO:
                         ProcessExit("PRE");
                         break;
-                    case   EXCEPTION_BREAKPOINT:            /* #BP */  
-                        // Do what the parent process want to do when the child process gets #BP interrupt.  
-                        // ProcessExit("PBP");
+                    case   EXCEPTION_BREAKPOINT:
                         break;
-          
-                    default:   
-                        // printf("Unknown Exception\n"); 
-                        ProcessExit("PRE");
+                    default:
+                        printf("Unknown Exception [0x%x]\n", de.u.Exception.ExceptionRecord.ExceptionCode);
                         break;
                 }
 
-                ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
-                continue;
-      
+                if (de.u.Exception.ExceptionRecord.ExceptionCode==EXCEPTION_BREAKPOINT){
+                    char buf[1024];
+                    ZeroMemory(buf,sizeof(buf));
+
+                    dprintf(fd, "EXCEPTION_BREAKPOINT\n");
+
+                    ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
+                    getLastErrorText(buf,1024);
+                    dprintf(fd, "%s\n", buf);
+
+                    continue;
+                }else{
+                    ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
+                    continue;
+                }
+                
             case CREATE_PROCESS_DEBUG_EVENT:
+                dprintf(fd, "[CREATE_PROCESS_DEBUG_EVENT]\n");
                 break;
             case CREATE_THREAD_DEBUG_EVENT:
                 dprintf(fd, "[CREATE_THREAD_DEBUG_EVENT]\n");
@@ -279,20 +302,25 @@ int main(int argc, char ** argv){
                 break;
       
             default:  
-                // printf("Unknown Event!\n");
-                // ProcessExit("PEN");
+                dprintf(fd, "Unknown Event!\n");
                 break;
         }  
   
-        if (TRUE == stop) {  
-            //printf("Process exit\n");
-            ProcessExit("PEN");
+        if (TRUE == stop) {
+            if (!pot&&!pom){
+                ProcessExit("PEN");
+            }else if(pot){
+                ProcessExit("POT");
+            }else if(pom){
+                ProcessExit("POM");
+            }
+            
             break;
         }  
   
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
   
-    } // end of loop  
+    }
   
     assert(stop);
   
