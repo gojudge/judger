@@ -191,8 +191,10 @@ int main(int argc, char ** argv){
         parse_args(argc, argv);
     }
 
+    SetErrorMode(SEM_NOGPFAULTERRORBOX);
+
     if(!CreateProcess(NULL, executable, NULL, NULL, FALSE,
-        CREATE_DEFAULT_ERROR_MODE, NULL, NULL, &si, &pi)){
+        DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi)){
             dprintf(fd, "CreateProcess [%s] failed (%d).\n", executable, GetLastError());
             printf("CreateProcess failed (%d).\n", GetLastError());
             exit(-1);
@@ -206,7 +208,7 @@ int main(int argc, char ** argv){
         dprintf(fd, "Start Time [%d]\n", StartTime);
 
     }
-  
+
     while (TRUE) {  
         int ct = 0;
 
@@ -229,7 +231,7 @@ int main(int argc, char ** argv){
         if (de.dwDebugEventCode>0){
             dprintf(fd, "Trace DebugEventCode [%x]\n", (de.dwDebugEventCode));
         }
-        
+
         switch (de.dwDebugEventCode) {  
             case EXCEPTION_DEBUG_EVENT:         /* exception */  
                 switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
@@ -239,43 +241,42 @@ int main(int argc, char ** argv){
                         break;
                     case   EXCEPTION_BREAKPOINT:            /* #BP */  
                         // Do what the parent process want to do when the child process gets #BP interrupt.  
-                        ProcessExit("PBP");
+                        // ProcessExit("PBP");
                         break;
           
                     default:   
                         // printf("Unknown Exception\n"); 
                         ProcessExit("PRE");
                         break;
-                }      
-      
+                }
+
                 ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
                 continue;
       
             case CREATE_PROCESS_DEBUG_EVENT:
                 break;
-
             case CREATE_THREAD_DEBUG_EVENT:
                 dprintf(fd, "[CREATE_THREAD_DEBUG_EVENT]\n");
-                continue;
+                break;
             case EXIT_PROCESS_DEBUG_EVENT:
                 dprintf(fd, "[EXIT_PROCESS_DEBUG_EVENT]\n");
                 stop = TRUE;
                 break;
             case EXIT_THREAD_DEBUG_EVENT:
                 dprintf(fd, "[EXIT_THREAD_DEBUG_EVENT]\n");
-                continue;
+                break;
             case LOAD_DLL_DEBUG_EVENT:
                 dprintf(fd, "[LOAD_DLL_DEBUG_EVENT]\n");
-                continue;
+                break;
             case OUTPUT_DEBUG_STRING_EVENT:
                 dprintf(fd, "[OUTPUT_DEBUG_STRING_EVENT]\n");
-                continue;
+                break;
             case RIP_EVENT:
                 dprintf(fd, "[RIP_EVENT]\n");
-                continue;
+                break;
             case UNLOAD_DLL_DEBUG_EVENT:
                 dprintf(fd, "[UNLOAD_DLL_DEBUG_EVENT]\n");
-                continue;
+                break;
       
             default:  
                 // printf("Unknown Event!\n");
