@@ -10,8 +10,7 @@ import (
 func GenScript() {
 	currentPath, _ := os.Getwd()
 
-	gccWin := `@set PATH=%%PATH%%;%s
-%s %%1 1> BUILD.LOG 2>&1
+	gccWin := `"%s\bin\%s.exe" %%1 -g3 -I"%s\include" -L"%s\lib" -g3 1> BUILD.LOG 2>&1
 echo %%ERRORLEVEL%% > BUILDRESULT`
 
 	gccNix := `%s $1 1> BUILD.LOG 2>&1
@@ -26,8 +25,8 @@ echo $? > BUILDRESULT`
 
 	if runtime.GOOS == "windows" {
 		gccWinPath := C.Get(runtime.GOOS, "gcc_path")
-		gccScript = fmt.Sprintf(gccWin, gccWinPath, "gcc")
-		gppScript = fmt.Sprintf(gccWin, gccWinPath, "g++")
+		gccScript = fmt.Sprintf(gccWin, gccWinPath, "gcc", gccWinPath, gccWinPath)
+		gppScript = fmt.Sprintf(gccWin, gccWinPath, "g++", gccWinPath, gccWinPath)
 		runWin := `"` + currentPath + `\sandbox\c\build\executer.exe" %1 %2 %3`
 
 		com.WriteFile(C.Get(runtime.GOOS, "compiler_c"), gccScript)
