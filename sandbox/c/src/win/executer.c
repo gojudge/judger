@@ -22,6 +22,9 @@ int StartTime = 0;       // process start time
 BOOL pot = FALSE;        // process out of time
 BOOL pom = FALSE;        // process out of memory
 
+HANDLE hChildStdoutRd, hChildStdoutWr;
+
+#define BUFSIZE 2048
 
 /** kill process by pid */
 BOOL KillProcess(DWORD ProcessId){
@@ -86,6 +89,12 @@ void ThreadProc(void* arg){
 
     while(TRUE)     
     {   
+        DWORD dwRead;
+        CHAR chBuf[BUFSIZE+1];
+        ZeroMemory(chBuf, BUFSIZE+1);
+        ReadFile(hChildStdoutRd, chBuf, BUFSIZE, &dwRead, NULL);
+        printf("%s",chBuf);
+
         if (max_time > 0){
             // time check
             ct = CurrentTime();
@@ -96,7 +105,22 @@ void ThreadProc(void* arg){
             }
         }
     }  
-}  
+}
+
+// Create STDIO pipe
+BOOL redirect_stdio(HANDLE* pChildStdoutRd, HANDLE* pChildStdoutWr){
+    SECURITY_ATTRIBUTES secattr; 
+    ZeroMemory(&secattr, sizeof(secattr));
+    secattr.nLength = sizeof(secattr);
+    secattr.lpSecurityDescriptor = NULL;
+    secattr.bInheritHandle = TRUE;
+
+    if(!CreatePipe(pChildStdoutRd, pChildStdoutWr, &secattr, 0)){
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 /** Parse Command Args */
 void parse_args(int argc, char *argv[]){
@@ -155,7 +179,7 @@ void parse_args(int argc, char *argv[]){
                 len = strlen(tag_value);
                 memset(output, 0, PATH_LEN);
                 strncpy(output, tag_value, len);
-                input[len] = 0;
+                output[len] = 0;
             }
 
         } else {                // executable path, just one
@@ -182,8 +206,6 @@ int main(int argc, char ** argv){
     BOOL stop = FALSE;
     
     ZeroMemory(&de, sizeof(de));
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
     // alloc memory for input/output, executable path
@@ -214,11 +236,27 @@ int main(int argc, char ** argv){
         parse_args(argc, argv);
     }
 
-    if(!CreateProcess(NULL, executable, NULL, NULL, FALSE,
-        DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi)){
-            dprintf(fd, "CreateProcess [%s] failed (%d).\n", executable, GetLastError());
-            printf("CreateProcess failed (%d).\n", GetLastError());
-            exit(-1);
+    if(!redirect_stdio(&hChildStdoutRd, &hChildStdoutWr)){
+        dprintf(fd, "Set IO Redirect Pipe Failed");
+    }
+
+    // IO Redirection
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    
+    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+    si.hStdOutput = hChildStdoutWr;
+    si.hStdError = hChildStdoutWr;
+
+    if(!CreateProcess(NULL, 
+                    executable, NULL, NULL, TRUE, 
+                    DEBUG_ONLY_THIS_PROCESS, NULL, NULL, &si, &pi)){
+        CloseHandle(hChildStdoutRd);
+        CloseHandle(hChildStdoutWr);
+        dprintf(fd, "CreateProcess [%s] failed (%d).\n", executable, GetLastError());
+        printf("CreateProcess failed (%d).\n", GetLastError());
+        exit(-1);
     }else{
         LPDWORD tid;
 
@@ -233,11 +271,15 @@ int main(int argc, char ** argv){
         dprintf(fd, "Start Time [%d]\n", StartTime);
 
         if (NULL==CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ThreadProc, (LPVOID)NULL, 0, tid)){
-            dprintf(fd, "Created Thread failed\n");
+            dprintf(fd, "Created Timer Thread failed\n");
         }
+
+        CloseHandle(hChildStdoutWr);
+        
     }
 
     while (TRUE) {
+        
         WaitForDebugEvent (&de, INFINITE); 
 
         if (max_mem>0){

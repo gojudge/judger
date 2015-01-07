@@ -209,7 +209,7 @@ void parse_args(int argc, char *argv[])
 				len = strlen(tag_value);
 				memset(output, 0, PATH_LEN);
 				strncpy(output, tag_value, len);
-				input[len] = 0;
+				output[len] = 0;
 			}
 
 		} else {				// executable path, just one
