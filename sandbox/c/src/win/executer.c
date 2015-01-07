@@ -7,7 +7,7 @@
 
 #include "executer.h"
 
-#define VERSION "1.0.0"
+#define VERSION "1.1.0"
 
 size_t PATH_LEN = 1024;
 long max_time;           // max time
@@ -23,6 +23,9 @@ BOOL pot = FALSE;        // process out of time
 BOOL pom = FALSE;        // process out of memory
 
 HANDLE hChildStdoutRd, hChildStdoutWr;
+HANDLE hChildStdinRd, hChildStdinWr;
+FILE* file_out = NULL;
+FILE* file_in = NULL;
 
 #define BUFSIZE 2048
 
@@ -40,6 +43,10 @@ BOOL KillProcess(DWORD ProcessId){
 void ProcessExit(const char* exit_mark){
     FILE* run_result = NULL;
 
+    if (1 == judger_model){
+        fclose(file_out);
+    }
+
     if (!KillProcess(pid)){
         dprintf(fd, "Kill Process Failed!\n");
         return;
@@ -48,11 +55,6 @@ void ProcessExit(const char* exit_mark){
     run_result = fopen("RUNRESULT", "w");
     fprintf(run_result, "%s", exit_mark);
     fclose(run_result);
-
-    // for debug
-    if (1 != judger_model){
-        // printf("[%s]", exit_mark);
-    }
     
     dprintf(fd, "Process Exited! [%s]\n", exit_mark);
     exit(0);
@@ -88,12 +90,21 @@ void ThreadProc(void* arg){
     int ct = 0;
 
     while(TRUE)     
-    {   
-        DWORD dwRead;
-        CHAR chBuf[BUFSIZE+1];
-        ZeroMemory(chBuf, BUFSIZE+1);
-        ReadFile(hChildStdoutRd, chBuf, BUFSIZE, &dwRead, NULL);
-        printf("%s",chBuf);
+    {
+        if (1 == judger_model){
+            DWORD dwRead;
+
+            CHAR chBufOut[BUFSIZE+1];
+
+            ZeroMemory(chBufOut, BUFSIZE+1);
+
+
+            ReadFile(hChildStdoutRd, chBufOut, BUFSIZE, &dwRead, NULL);
+            chBufOut[BUFSIZE]=0;
+            fprintf(file_out, "%s", chBufOut);
+
+            
+        }
 
         if (max_time > 0){
             // time check
@@ -237,17 +248,62 @@ int main(int argc, char ** argv){
     }
 
     if(!redirect_stdio(&hChildStdoutRd, &hChildStdoutWr)){
-        dprintf(fd, "Set IO Redirect Pipe Failed");
+        dprintf(fd, "Set Output Redirect Pipe Failed");
+    }
+
+    if(!redirect_stdio(&hChildStdinWr, &hChildStdinRd)){
+        dprintf(fd, "Set Input Redirect Pipe Failed");
     }
 
     // IO Redirection
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     
-    si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-    si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-    si.hStdOutput = hChildStdoutWr;
-    si.hStdError = hChildStdoutWr;
+    if (1 == judger_model){
+        DWORD dwWritten;
+        CHAR chBufIn[BUFSIZE+1];
+        BOOL rst = FALSE;
+        int in_len = 0;
+
+        // set default input file name
+        if (input[0]){
+            char* tmp_input = "input";
+            int len_input = strlen(tmp_input);
+            strncpy(input,tmp_input,len_input);
+            input[len_input]=0;
+        }
+
+        // redirection input
+        ZeroMemory(chBufIn, BUFSIZE+1);
+        file_in = fopen(input,"r");
+        free(input);
+        fread(chBufIn,BUFSIZE,1,file_in);
+        in_len = strlen(chBufIn);
+        chBufIn[in_len]='\n';
+        rst = WriteFile(hChildStdinRd, chBufIn, in_len+1, &dwWritten, NULL);
+        
+        if (rst){
+            dprintf(fd, "[%d] char written into input file\n", dwWritten);
+        }
+
+        // set redirection for child process
+        si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+        si.hStdInput = hChildStdinWr;
+        si.hStdOutput = hChildStdoutWr;
+        si.hStdError = hChildStdoutWr;
+
+        // set default output file name
+        if (output[0]==0){
+            char* tmp_output = "output";
+            int len_output = strlen(tmp_output);
+            strncpy(output,tmp_output,len_output);
+            output[len_output]=0;
+        }
+        dprintf(fd, "output file [%s]\n", output);
+        file_out = fopen(output,"w");
+        free(output);
+
+    }
 
     if(!CreateProcess(NULL, 
                     executable, NULL, NULL, TRUE, 
@@ -275,7 +331,7 @@ int main(int argc, char ** argv){
         }
 
         CloseHandle(hChildStdoutWr);
-        
+        CloseHandle(hChildStdinWr);
     }
 
     while (TRUE) {
