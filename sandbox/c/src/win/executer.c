@@ -346,11 +346,70 @@ int main(int argc, char ** argv){
         
         switch (de.dwDebugEventCode){
             case EXCEPTION_DEBUG_EVENT:
-                switch (de.u.Exception.ExceptionRecord.ExceptionCode) {   
-                    case   EXCEPTION_INT_DIVIDE_BY_ZERO:
+                switch (de.u.Exception.ExceptionRecord.ExceptionCode) {
+                    case   EXCEPTION_ACCESS_VIOLATION:
+                        dprintf(fd,"EXCEPTION_ACCESS_VIOLATION\n");
                         ProcessExit("PRE");
                         break;
+                    case   EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+                        dprintf(fd,"EXCEPTION_ARRAY_BOUNDS_EXCEEDED\n");
+                        break;
                     case   EXCEPTION_BREAKPOINT:
+                        dprintf(fd,"EXCEPTION_BREAKPOINT\n");
+                        // Ignore
+                        break;
+                    case   EXCEPTION_DATATYPE_MISALIGNMENT:
+                        dprintf(fd,"EXCEPTION_DATATYPE_MISALIGNMENT\n");
+                        break;
+                    case   EXCEPTION_FLT_DENORMAL_OPERAND:
+                        dprintf(fd,"EXCEPTION_FLT_DENORMAL_OPERAND\n");
+                        break;
+                    case   EXCEPTION_FLT_DIVIDE_BY_ZERO:
+                        dprintf(fd,"EXCEPTION_FLT_DIVIDE_BY_ZERO\n");
+                        ProcessExit("PRE");
+                        break;
+                    case   EXCEPTION_FLT_INEXACT_RESULT:
+                        dprintf(fd,"EXCEPTION_FLT_INEXACT_RESULT\n");
+                        break;
+                    case   EXCEPTION_FLT_INVALID_OPERATION:
+                        dprintf(fd,"EXCEPTION_FLT_INVALID_OPERATION\n");
+                        break;
+                    case   EXCEPTION_FLT_OVERFLOW:
+                        dprintf(fd,"EXCEPTION_FLT_OVERFLOW\n");
+                        break;
+                    case   EXCEPTION_FLT_STACK_CHECK:
+                        dprintf(fd,"EXCEPTION_FLT_STACK_CHECK\n");
+                        break;
+                    case   EXCEPTION_FLT_UNDERFLOW:
+                        dprintf(fd,"EXCEPTION_FLT_UNDERFLOW\n");
+                        break;
+                    case   EXCEPTION_ILLEGAL_INSTRUCTION:
+                        dprintf(fd,"EXCEPTION_ILLEGAL_INSTRUCTION\n");
+                        break;
+                    case   EXCEPTION_IN_PAGE_ERROR:
+                        dprintf(fd,"EXCEPTION_IN_PAGE_ERROR\n");
+                        break;
+                    case   EXCEPTION_INT_DIVIDE_BY_ZERO:
+                        dprintf(fd,"EXCEPTION_INT_DIVIDE_BY_ZERO\n");
+                        ProcessExit("PRE");
+                        break;
+                    case   EXCEPTION_INT_OVERFLOW:
+                        dprintf(fd,"EXCEPTION_INT_OVERFLOW\n");
+                        break;
+                    case   EXCEPTION_INVALID_DISPOSITION:
+                        dprintf(fd,"EXCEPTION_INVALID_DISPOSITION\n");
+                        break;
+                    case   EXCEPTION_NONCONTINUABLE_EXCEPTION:
+                        dprintf(fd,"EXCEPTION_NONCONTINUABLE_EXCEPTION\n");
+                        break;
+                    case   EXCEPTION_PRIV_INSTRUCTION:
+                        dprintf(fd,"EXCEPTION_PRIV_INSTRUCTION\n");
+                        break;
+                    case   EXCEPTION_SINGLE_STEP:
+                        dprintf(fd,"EXCEPTION_SINGLE_STEP\n");
+                        break;
+                    case   EXCEPTION_STACK_OVERFLOW:
+                        dprintf(fd,"EXCEPTION_STACK_OVERFLOW\n");
                         break;
                     default:
                         printf("Unknown Exception [0x%x]\n", de.u.Exception.ExceptionRecord.ExceptionCode);
@@ -358,15 +417,8 @@ int main(int argc, char ** argv){
                 }
 
                 if (de.u.Exception.ExceptionRecord.ExceptionCode==EXCEPTION_BREAKPOINT){
-                    char buf[1024];
-                    ZeroMemory(buf,sizeof(buf));
-
                     dprintf(fd, "EXCEPTION_BREAKPOINT\n");
-
                     ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
-                    getLastErrorText(buf,1024);
-                    dprintf(fd, "%s\n", buf);
-
                     continue;
                 }else{
                     ContinueDebugEvent(de.dwProcessId,de.dwThreadId,DBG_EXCEPTION_HANDLED);
