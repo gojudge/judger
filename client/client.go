@@ -3,13 +3,21 @@ package client
 import (
 	"fmt"
 	"github.com/gogather/com/log"
+	"io"
 	"net"
 )
+
+var J *JClient
 
 type JClient struct {
 	ip   string
 	port int
 	conn net.Conn
+}
+
+func New(ip string, port int) {
+	J = &JClient{}
+	J.Start(ip, port)
 }
 
 func (this *JClient) Start(ip string, port int) error {
@@ -28,12 +36,12 @@ func (this *JClient) Start(ip string, port int) error {
 func (this *JClient) Request(msg string) string {
 	var buf [10240]byte
 
-	this.conn.Write(msg)
+	this.conn.Write([]byte(msg))
 
 	n, err := this.conn.Read(buf[0:])
 	if err != nil {
 		if err == io.EOF {
-			return
+			return ""
 		}
 	}
 

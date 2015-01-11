@@ -74,7 +74,7 @@ func Parse(frame string, cli *Client) {
 
 func handleError(err error, tcpConn net.Conn) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Client error: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "Client error: %s\n", err.Error())
 		if tcpConn != nil {
 			tcpConn.Close()
 		}
