@@ -12,7 +12,7 @@ import (
 
 const (
 	BUFF_SIZE = 10
-	MARK      = `#`
+	MARK      = "\003"
 	MAX_LCI   = 100
 )
 
