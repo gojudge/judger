@@ -10,21 +10,30 @@ import (
 var J *JClient
 
 type JClient struct {
-	ip   string
-	port int
-	conn net.Conn
+	ip        string
+	port      int
+	conn      net.Conn
+	connected bool
 }
 
 func New(ip string, port int) {
 	J = &JClient{}
-	J.Start(ip, port)
+	err := J.Start(ip, port)
+	if err != nil {
+		J.connected = false
+	} else {
+		J.connected = true
+	}
 }
 
 func (this *JClient) Start(ip string, port int) error {
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		conn.Close()
+		if conn != nil {
+			conn.Close()
+		}
+
 		log.Warnln("connect judge server failed in port:", port)
 	} else {
 		this.conn = conn
@@ -35,6 +44,10 @@ func (this *JClient) Start(ip string, port int) error {
 
 func (this *JClient) Request(msg string) string {
 	var buf [10240]byte
+
+	if !this.connected {
+		return ""
+	}
 
 	this.conn.Write([]byte(msg))
 
