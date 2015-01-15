@@ -9,7 +9,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 )
+
+var BuildStartTime int64
 
 type Compile struct {
 	system        string
@@ -24,9 +27,12 @@ type Compile struct {
 
 	compiler_cpp string
 	postfix_cpp  string
+
+	buildOverTime bool
 }
 
 func (this *Compile) NewCompile() {
+	this.buildOverTime = false
 	this.system = runtime.GOOS
 	this.postfix_c = "c"
 	this.postfix_cpp = "cpp"
@@ -103,13 +109,35 @@ func (this *Compile) gcc(id int) error {
 		)
 	}
 
-	_, err := cmd.Output()
+	err := cmd.Start()
 	if err != nil {
-		log.Warnln("失败")
+		log.Warnln("Start Failed")
+		log.Warnln(err)
+	}
+
+	stn := time.Now()
+	BuildStartTime = stn.UnixNano()
+	go checkTimer(cmd, this)
+
+	err = cmd.Wait()
+
+	if err != nil {
+		log.Warnln("Wait Failed")
 		log.Warnln(err)
 	}
 
 	os.Chdir(this.currentPath)
 
 	return err
+}
+
+func checkTimer(cmd *exec.Cmd, comp *Compile) {
+	stn := time.Now()
+	now := stn.UnixNano()
+	// over 10s
+	if now-BuildStartTime > 10*1000000000 {
+		comp.buildOverTime = true
+		log.Warnln("Building Out of Time, Terminated!")
+		cmd.Process.Kill()
+	}
 }

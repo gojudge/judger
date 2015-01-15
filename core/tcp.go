@@ -12,7 +12,6 @@ import (
 
 const (
 	BUFF_SIZE = 10
-	MARK      = "\003"
 	MAX_LCI   = 100
 )
 
@@ -25,6 +24,7 @@ type Client struct {
 
 var buff = make([]byte, BUFF_SIZE)
 var cliTab = make(map[int]*Client)
+var MARK string
 
 /// close client connect from server
 func (this *Client) Close() {
@@ -130,6 +130,12 @@ func TcpStart() {
 	i := 0
 	ln, err := net.Listen("tcp", ":1004")
 	handleError(err, nil)
+
+	if os.Args[1] == "debug" {
+		MARK = "#"
+	} else {
+		MARK = "\003"
+	}
 
 	for {
 		conn, err := ln.Accept()
