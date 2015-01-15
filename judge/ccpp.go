@@ -132,12 +132,15 @@ func (this *Compile) gcc(id int) error {
 }
 
 func checkTimer(cmd *exec.Cmd, comp *Compile) {
-	stn := time.Now()
-	now := stn.UnixNano()
-	// over 10s
-	if now-BuildStartTime > 10*1000000000 {
-		comp.buildOverTime = true
-		log.Warnln("Building Out of Time, Terminated!")
-		cmd.Process.Kill()
+	for {
+		stn := time.Now()
+		now := stn.UnixNano()
+		// over 10s
+		if now-BuildStartTime > 10*1000000000 {
+			comp.buildOverTime = true
+			log.Warnln("Building Out of Time, Terminated!")
+			cmd.Process.Kill()
+			return
+		}
 	}
 }

@@ -131,7 +131,7 @@ func TcpStart() {
 	ln, err := net.Listen("tcp", ":1004")
 	handleError(err, nil)
 
-	if os.Args[1] == "debug" {
+	if len(os.Args) > 1 && os.Args[1] == "debug" {
 		MARK = "#"
 	} else {
 		MARK = "\003"
