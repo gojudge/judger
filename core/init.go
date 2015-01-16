@@ -65,7 +65,8 @@ func Judger() {
 
 	createBuildDir()
 
-	TcpStart()
+	go TcpStart()
+	HttpStart()
 }
 
 func createBuildDir() error {

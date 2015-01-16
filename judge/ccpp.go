@@ -13,6 +13,7 @@ import (
 )
 
 var BuildStartTime int64
+var BuildProcessHaveExit bool
 
 type Compile struct {
 	system        string
@@ -118,8 +119,10 @@ func (this *Compile) gcc(id int) error {
 	stn := time.Now()
 	BuildStartTime = stn.UnixNano()
 	go checkTimer(cmd, this)
+	BuildProcessHaveExit = false
 
 	err = cmd.Wait()
+	BuildProcessHaveExit = true
 
 	if err != nil {
 		log.Warnln("Wait Failed")
@@ -133,6 +136,12 @@ func (this *Compile) gcc(id int) error {
 
 func checkTimer(cmd *exec.Cmd, comp *Compile) {
 	for {
+		// if building process hava exit normally, exit timer
+		if BuildProcessHaveExit {
+			log.Blueln("Building Process Exit Normally.")
+			return
+		}
+
 		stn := time.Now()
 		now := stn.UnixNano()
 		// over 10s
