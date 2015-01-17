@@ -4,6 +4,8 @@ import (
 	"github.com/duguying/judger/core"
 	"github.com/duguying/judger/judge"
 	"github.com/gogather/com"
+	"io"
+	"net/http"
 	"runtime"
 )
 
@@ -26,4 +28,8 @@ func (this *GatherController) Tcp(data map[string]interface{}, cli *core.Client)
 		"id":   id,
 	})
 	cli.Write(result)
+}
+
+func (this *GatherController) Http(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "hello, world from controller\n")
 }

@@ -1,12 +1,12 @@
 package core
 
 import (
-// "net"
+	"net/http"
 )
 
 type ControllerInterface interface {
 	Tcp(data map[string]interface{}, cli *Client)
-	Http()
+	Http(w http.ResponseWriter, r *http.Request)
 }
 
 var RouterMap map[string]ControllerInterface
