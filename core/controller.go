@@ -6,7 +6,7 @@ import (
 
 type ControllerInterface interface {
 	Tcp(data map[string]interface{}, cli *Client)
-	Http(w http.ResponseWriter, r *http.Request)
+	Http(data map[string]interface{}, w http.ResponseWriter, r *http.Request)
 }
 
 var RouterMap map[string]ControllerInterface
