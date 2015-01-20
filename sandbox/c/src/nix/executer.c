@@ -281,6 +281,8 @@ int main(int argc, char *argv[])
 			   "\033[0;32mversion " VERSION "\033[0m\n");
 		return 0;
 	} else {
+        int err = 0;
+
 		fd = 0;
 		fd = open("executer.debug", O_WRONLY | O_CREAT);
 
@@ -292,7 +294,12 @@ int main(int argc, char *argv[])
 
 		//read config
 		char *config_string = read_config(config_path);
-		parse_config_json(config_string);
+		err = parse_config_json(config_string);
+        
+        if(!err){
+            return err;
+        }
+
 		free_config_buffer(config_string);
 		free(config_path);
 	}

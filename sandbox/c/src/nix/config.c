@@ -18,13 +18,14 @@ int array_len = 0;
 int allow_syscall[LIST_LEN];
 
 /* Parse text to JSON, then render back to text, and print! */
-void parse_config_json(char *text)
+int parse_config_json(char *text)
 {
 	cJSON *root;
 
 	root = cJSON_Parse(text);
 	if (!root) {
 		printf("Error before: [%s]\n", cJSON_GetErrorPtr());
+        return -1;
 	} else {
 		int i = 0;
 		int time_tmp = cJSON_GetObjectItem(root, "time")->valueint;
@@ -50,6 +51,8 @@ void parse_config_json(char *text)
 
 		cJSON_Delete(root);
 	}
+
+    return 0;
 }
 
 /* read config file */

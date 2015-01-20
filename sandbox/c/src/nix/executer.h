@@ -29,5 +29,5 @@ extern size_t PATH_LEN;			// file path length
 extern int judger_model;		// judger model
 
 char *read_config(const char *filename);
-void parse_config_json(char *text);
+int parse_config_json(char *text);
 int free_config_buffer(char *buffer);
