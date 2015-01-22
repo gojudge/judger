@@ -17,7 +17,7 @@ type JClient struct {
 	connected bool
 }
 
-func New(ip string, port int) {
+func New(ip string, port int) error {
 	J = &JClient{}
 	err := J.Start(ip, port)
 	if err != nil {
@@ -25,6 +25,7 @@ func New(ip string, port int) {
 	} else {
 		J.connected = true
 	}
+	return err
 }
 
 func (this *JClient) Start(ip string, port int) error {
