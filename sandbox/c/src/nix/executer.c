@@ -8,7 +8,7 @@
 #include "executer.h"
 #include <errno.h>
 
-#define VERSION "1.1.1"
+#define VERSION "1.1.2"
 
 pid_t child;
 long begin_time;
@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
         int err = 0;
 
 		fd = 0;
-		fd = open("executer.debug", O_WRONLY | O_CREAT);
+		fd = open("executer.debug", O_CREAT | O_RDWR);
 
 		char *tmp_config_name = "executer.json";
 		strncpy(config_path, tmp_config_name, strlen(tmp_config_name));
@@ -293,10 +293,12 @@ int main(int argc, char *argv[])
 		parse_args(argc, argv);
 
 		//read config
+        dprintf(fd, "[config] %s\n", config_path);
 		char *config_string = read_config(config_path);
 		err = parse_config_json(config_string);
         
-        if(!err){
+        if(err){
+            dprintf(fd, "[error] json format config file parse error.\n");
             return err;
         }
 
