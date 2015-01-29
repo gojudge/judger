@@ -118,7 +118,7 @@ func (this *Compile) gcc(id int) error {
 
 	stn := time.Now()
 	BuildStartTime = stn.UnixNano()
-	go checkTimer(cmd, this)
+	go checkTimer(cmd, this, id)
 	BuildProcessHaveExit = false
 
 	err = cmd.Wait()
@@ -134,7 +134,7 @@ func (this *Compile) gcc(id int) error {
 	return err
 }
 
-func checkTimer(cmd *exec.Cmd, comp *Compile) {
+func checkTimer(cmd *exec.Cmd, comp *Compile, id int) {
 	for {
 		// if building process hava exit normally, exit timer
 		if BuildProcessHaveExit {
@@ -149,6 +149,20 @@ func checkTimer(cmd *exec.Cmd, comp *Compile) {
 			comp.buildOverTime = true
 			log.Warnln("Building Out of Time, Terminated!")
 			cmd.Process.Kill()
+
+			systemTag := com.SubString(runtime.GOOS, 0, 5)
+			if systemTag == "linux" {
+				// ps -ef|grep cc1|grep 5.c|awk '{print $2}'|xargs kill -9
+				cleanScript := fmt.Sprintf("ps -ef|grep cc1|grep %d.c|awk '{print $2}'|xargs kill -9", id)
+				cleanCmd := exec.Command("sh",
+					"-c",
+					cleanScript,
+				)
+				err := cleanCmd.Run()
+				if err != nil {
+					log.Warnln("clean orphan failed")
+				}
+			}
 			return
 		}
 	}
