@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"regexp"
+	"time"
 )
 
 var J *JClient
@@ -18,6 +19,7 @@ type JClient struct {
 	conn      net.Conn
 	connected bool
 	mark      string
+	debug     bool
 }
 
 func New(ip string, port int) (*JClient, error) {
@@ -29,6 +31,10 @@ func New(ip string, port int) (*JClient, error) {
 		J.connected = true
 	}
 	return J, err
+}
+
+func (this *JClient) SetDebug(flag bool) {
+	this.debug = flag
 }
 
 func (this *JClient) Start(ip string, port int) error {
@@ -63,8 +69,16 @@ func (this *JClient) Request(msg string) (string, error) {
 	}
 	this.conn.Write([]byte(msg + this.mark))
 	content, err := this.read()
-	length := len(content)
-	content = com.SubString(content, 0, length-1)
+	// kick sep char
+	reg := regexp.MustCompile(this.mark)
+	content = reg.ReplaceAllString(content, "")
+
+	if this.debug {
+		log.Bluef("[judger/send:%s]\n%s\n", time.Now(), msg)
+
+		log.Warnf("[judger/recv:%s]\n%s\n", time.Now(), content)
+	}
+
 	return content, err
 }
 
