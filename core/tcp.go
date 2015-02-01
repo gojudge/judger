@@ -35,6 +35,7 @@ func (this *Client) Close() {
 
 // send message to client and print in server console
 func (this *Client) Write(str string) {
+	str = str + MARK
 	this.Conn.Write([]byte(str))
 	fmt.Println(str)
 }
@@ -92,7 +93,7 @@ func handleConnection(tcpConn net.Conn, cid int) {
 	cliTab[cid] = cli
 
 	fmt.Println("Connected! Remote address is " + tcpConn.LocalAddr().String())
-	tcpConn.Write([]byte("Connected! Remote address is " + tcpConn.LocalAddr().String()))
+	tcpConn.Write([]byte("Connected! Remote address is " + tcpConn.LocalAddr().String() + "/" + MARK + "#"))
 	for {
 		n, err := tcpConn.Read(buff)
 		if err == io.EOF {
