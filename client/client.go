@@ -63,6 +63,8 @@ func (this *JClient) Request(msg string) (string, error) {
 	}
 	this.conn.Write([]byte(msg + this.mark))
 	content, err := this.read()
+	length := len(content)
+	content = com.SubString(content, 0, length-1)
 	return content, err
 }
 
