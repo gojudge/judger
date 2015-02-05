@@ -93,10 +93,6 @@ func (this *JClient) Start(ip string, port int, password string) error {
 
 // send request
 func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}, error) {
-	if !this.connected {
-		return nil, errors.New("Not Connected!")
-	}
-
 	msgStr, err := com.JsonEncode(msg)
 
 	if err != nil {
@@ -182,4 +178,26 @@ func (this *JClient) GetStatus(id int64, sid string) (map[string]interface{}, er
 	}
 
 	return this.Request(req)
+}
+
+// ping
+func (this *JClient) Ping() error {
+	if !this.login {
+		return errors.New("login first")
+	}
+
+	req := map[string]interface{}{
+		"action": "ping",
+	}
+
+	resp, err := this.Request(req)
+	if err != nil {
+		return err
+	}
+
+	if result, ok := resp["result"].(bool); !ok || !result {
+		return errors.New("ping failed.")
+	} else {
+		return nil
+	}
 }
