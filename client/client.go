@@ -24,7 +24,7 @@ type JClient struct {
 
 func New(ip string, port int, password string) (*JClient, error) {
 	J := &JClient{}
-	err := J.Start(ip, port)
+	err := J.Start(ip, port, password)
 	if err != nil {
 		J.connected = false
 	} else {
@@ -97,7 +97,7 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 		return nil, errors.New("Not Connected!")
 	}
 
-	msgStr, err = com.JsonEncode(msg)
+	msgStr, err := com.JsonEncode(msg)
 
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 
 	resp, err := com.JsonDecode(content)
 
-	return resp, err
+	return resp.(map[string]interface{}), err
 }
 
 // read message from socket
@@ -166,7 +166,7 @@ func (this *JClient) AddTask(id int64, sid string, language string, code string)
 		"code":     html.EscapeString(code),
 	}
 
-	return this.Request(Req)
+	return this.Request(req)
 }
 
 // get task status
@@ -181,5 +181,5 @@ func (this *JClient) GetStatus(id int64, sid string) (map[string]interface{}, er
 		"id":     id,
 	}
 
-	return this.Request(Req)
+	return this.Request(req)
 }
