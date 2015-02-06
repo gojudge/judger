@@ -56,6 +56,7 @@ func (this *JClient) Start(ip string, port int, password string) error {
 		return err
 	} else {
 		this.conn = conn
+		this.connected = true
 		content, err := this.read()
 		if err != nil {
 			return err
@@ -100,10 +101,17 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 	}
 
 	if this.conn == nil {
+		log.Warnln("Connection Not Exist")
 		return nil, errors.New("Connection Not Exist")
 	}
 
-	this.conn.Write([]byte(msgStr + this.mark))
+	_, err = this.conn.Write([]byte(msgStr + this.mark))
+	if err != nil {
+		log.Warnln("[Write Error]", err)
+		this.conn.Close()
+		return nil, err
+	}
+
 	content, err := this.read()
 
 	if err != nil {
