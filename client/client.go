@@ -99,6 +99,10 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 		return nil, err
 	}
 
+	if this.conn == nil {
+		return nil, errors.New("Connection Not Exist")
+	}
+
 	this.conn.Write([]byte(msgStr + this.mark))
 	content, err := this.read()
 
