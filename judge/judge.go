@@ -2,9 +2,9 @@
 package judge
 
 import (
-	"fmt"
+// "fmt"
 )
 
 func Judge(raw string, expect string) string {
-
+	return ""
 }

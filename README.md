@@ -1,29 +1,8 @@
 # judger 
 
-<table>
-	<tr>
-		<td>linux-drone</td>
-		<td>windows</td>
-		<td>linux-travis</td>
-	</tr>
-	<tr>
-		<td>
-			<a title="drone" href="https://drone.io/github.com/duguying/judger/latest">
-				<img src="https://drone.io/github.com/duguying/judger/status.png" />
-			</a>
-		</td>
-		<td>
-			<a title="appveyor" href="https://ci.appveyor.com/project/duguying/judger">
-				<img src="https://ci.appveyor.com/api/projects/status/s20r7g9jfgxngiik?svg=true" />
-			</a>
-		</td>
-		<td>
-			<a title="travis" href="https://travis-ci.org/duguying/judger">
-				<img src="https://api.travis-ci.org/duguying/judger.png" />
-			</a>
-		</td>
-	</tr>
-</table>
+| linux-drone | windows | linux-travis |
+|-------------|---------|--------------|
+| [![drone](https://drone.io/github.com/duguying/judger/status.png)](https://drone.io/github.com/duguying/judger/latest) | [![appveyor](https://ci.appveyor.com/api/projects/status/s20r7g9jfgxngiik?svg=true)](https://ci.appveyor.com/project/duguying/judger) | [![travis](https://api.travis-ci.org/duguying/judger.png)](https://travis-ci.org/duguying/judger) |
 
 the judger server of online judge system
 
