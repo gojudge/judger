@@ -23,7 +23,7 @@ go get
 go build
 cd sandbox/c/build
 cmake -G"NMake Makefiles" ..
-make
+nmake
 ```
 
 ## Install from Docker
