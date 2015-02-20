@@ -26,13 +26,17 @@ func (this *Sqlite) createTable() {
 )`
 
 	table2 := `CREATE TABLE [task] (
-[id] INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+[id] INTEGER  PRIMARY KEY AUTOINCREMENT NOT NULL,
 [task_id] VARCHAR(128)  UNIQUE NOT NULL,
-[language] VARCHAR(64) DEFAULT 'C' NOT NULL,
-[type] VARCHAR(16) DEFAULT 'io' NOT NULL,
+[language] VARCHAR(64) DEFAULT '''C''' NOT NULL,
+[type] VARCHAR(16) DEFAULT '''io''' NOT NULL,
 [io_data] TEXT  NULL,
 [code] TEXT  NULL,
-[time] TIME DEFAULT CURRENT_TIMESTAMP NOT NULL
+[time] TIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+[build_log] TEXT  NULL,
+[build_result] VARCHAR(128)  NULL,
+[run_result] VARCHAR(128)  NULL,
+[debug_info] TEXT  NULL
 )`
 
 	_, err := o.Raw(table1).Exec()
