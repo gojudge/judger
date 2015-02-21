@@ -36,7 +36,7 @@ func (this *SessionTab) GetSession(sid string) (Session, error) {
 	var sess SessionTab
 
 	sess.Session = sid
-	err = o.Read(&sess, "Session")
+	err = o.Read(&sess, "SessionTab")
 
 	return sess, err
 }
