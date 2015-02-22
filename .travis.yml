@@ -9,3 +9,5 @@ script:
   - cd sandbox/c/build
   - cmake ..
   - make
+  - cd ../../java
+  - mvn test

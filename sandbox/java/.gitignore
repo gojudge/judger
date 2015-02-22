@@ -4,3 +4,6 @@
 # intellij idea
 /.idea/
 *.iml
+
+# maven
+/target/
