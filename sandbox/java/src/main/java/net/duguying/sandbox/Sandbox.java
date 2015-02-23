@@ -21,21 +21,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 public final class Sandbox {
+    private static String VERSION = "0.0.1";
 
     //用来收集线程的内存使用量
     private static MemoryMXBean _memoryBean = ManagementFactory.getMemoryMXBean();
 
     //定向输出
     private static ByteArrayOutputStream _baos = new ByteArrayOutputStream(1024);
-
-    //Socket通信
-    private static Socket _socket = null;
-
-    private static ServerSocket _serverSocket = null;
-
-    private static ObjectInputStream _inputStream = null;
-
-    private static ObjectOutputStream _outputStream = null;
 
     //执行提交程序线程
     private static Thread _thread = null;
@@ -134,12 +126,6 @@ public final class Sandbox {
     private static void inita(String classPath, int port) throws Exception{
         _classPath = classPath;
 
-        _serverSocket = new ServerSocket(port);
-        _socket = _serverSocket.accept();
-
-        _outputStream = new ObjectOutputStream(_socket.getOutputStream());
-        _inputStream = new ObjectInputStream(_socket.getInputStream());
-
         //重新定向输出流
         System.setOut(new PrintStream(new BufferedOutputStream(_baos) {
             public void write(byte[] b, int off, int len) throws IOException {
@@ -196,7 +182,7 @@ public final class Sandbox {
         _outputSize = 0;
 //        setResult(JudgeResult.WRONG_ANSWER);
         //定向输入流
-        System.setIn(new BufferedInputStream(new ByteArrayInputStream(standardInput.getBytes())));
+//        System.setIn(new BufferedInputStream(new ByteArrayInputStream(standardInput.getBytes())));
 
         String output = null;
 
@@ -219,57 +205,6 @@ public final class Sandbox {
 //            setResult(JudgeResult.MEMORY_LIMIT_EXCEED);
         }
 
-        try {
-            //向主模块返回执行结果
-            sendResult(runId, (int)_timeUsed, _memoryUsed, _result);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 	向主模块发送运行结果.
-     *
-     * @param runId 运行runId
-     * 	@param timeUsed	代码运行时间(MS)
-     * @param	 memoryUsed	代码运行空间(B)
-     * 	@param result	 代码执行结果
-     * */
-    private static void sendResult(int runId,int timeUsed, int memoryUsed, String result) throws IOException{
-        _outputStream.writeInt(runId);
-        _outputStream.writeInt(timeUsed);
-        _outputStream.writeInt(memoryUsed);
-        _outputStream.writeUTF(result);
-    }
-
-    /**
-     * 	接收运行参数
-     *
-     * */
-    private static void receiveMsg() throws IOException{
-        int runId = _inputStream.readInt();
-        int timeLimit = _inputStream.readInt();
-        int memoryLimit = _inputStream.readInt();
-        String standardInput = _inputStream.readUTF();
-        String standardOutput = _inputStream.readUTF();
-
-        run(runId, timeLimit, memoryLimit, standardInput, standardOutput);
-    }
-
-    /**
-     * 	关闭网络连接
-     * */
-    private static void close(){
-        try {
-            if (_inputStream != null)
-                _inputStream.close();
-            if (_outputStream != null)
-                _outputStream.close();
-            if (_socket != null)
-                _socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -279,16 +214,21 @@ public final class Sandbox {
      * 			port 		  -- args[1] ------- 监听端口
      * */
     public static void main(String[] args) throws Exception{
+        if(args.length < 1){
+            System.out.printf("Sandbox for Java\n");
+            System.out.printf("Usage:\n");
+            System.out.printf("  sandbox <classpath>\n");
+            System.out.printf("VERSION %s\n",VERSION);
+
+            return;
+        }
+
+        System.out.print("[classpath] " + args[0] + "\n");
         inita(args[0], Integer.parseInt(args[1]));
 
         SecurityManager security = System.getSecurityManager();
-        if (security == null)
+        if (security == null) {
             System.setSecurityManager(new SandboxSecurityManager());
-
-        while (!_socket.isClosed()){
-            receiveMsg();
         }
-
-        close();
     }
 }
