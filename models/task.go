@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"fmt"
@@ -40,7 +40,7 @@ func (this *TaskTab) AddTask(id int, sid string, language string, ptype string, 
 	task.RunResult = "TA"
 	task.DebugInfo = ""
 
-	_, err = o.Insert(&task)
+	_, err := o.Insert(&task)
 
 	return err
 }
@@ -50,7 +50,7 @@ func (this *TaskTab) GetTaskInfo(id int, sid string) (TaskTab, error) {
 	var task TaskTab
 
 	task.TaskId = fmt.Sprintf("%s:%d", sid, id)
-	err = o.Read(&task, "TaskTab")
+	err := o.Read(&task, "task")
 
 	return task, err
 }
@@ -60,14 +60,14 @@ func (this *TaskTab) UpdateTaskInfo(id int, sid string, buildLog string, buildRe
 	var task TaskTab
 
 	task.TaskId = fmt.Sprintf("%s:%d", sid, id)
-	err = o.Read(&task, "TaskTab")
+	err := o.Read(&task, "TaskTab")
 
 	task.BuildLog = buildLog
 	task.BuildResult = buildResult
 	task.RunResult = runResult
 	task.DebugInfo = debugInfo
 
-	_, err := o.Update(&task)
+	_, err = o.Update(&task)
 
 	return err
 }

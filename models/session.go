@@ -1,4 +1,4 @@
-package model
+package models
 
 import (
 	"github.com/astaxie/beego/orm"
@@ -25,18 +25,18 @@ func (this *SessionTab) CreateSession() (string, error) {
 	sess.Session = sid
 	sess.CreateTime = time.Now()
 
-	_, err = o.Insert(&sess)
+	_, err := o.Insert(&sess)
 
 	return sid, err
 }
 
 // get session from database
-func (this *SessionTab) GetSession(sid string) (Session, error) {
+func (this *SessionTab) GetSession(sid string) (SessionTab, error) {
 	o := orm.NewOrm()
 	var sess SessionTab
 
 	sess.Session = sid
-	err = o.Read(&sess, "SessionTab")
+	err := o.Read(&sess, "session")
 
 	return sess, err
 }
