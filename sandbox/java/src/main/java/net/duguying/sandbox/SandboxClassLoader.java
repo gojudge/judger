@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 class SandboxClassLoader extends ClassLoader{
     /**默认classPath*/
     private String _classPath;
-    private String seperater = ".";
+    private String seperater = "/";
 
     /**
      * 	构造函数
@@ -33,6 +33,7 @@ class SandboxClassLoader extends ClassLoader{
         }
 
         File classFile = new File(classPath + seperater + className + ".class");
+        System.out.println("[class full path] " + classPath + seperater + className + ".class");
         byte[] mainClass = new byte[(int) classFile.length()];
         try {
             FileInputStream in = new FileInputStream(classFile);
@@ -40,6 +41,7 @@ class SandboxClassLoader extends ClassLoader{
             in.close();
         } catch (Exception e) {
             //e.printStackTrace();
+            System.out.print("[error] Can not found class file.\n");
             throw new ClassNotFoundException(className);
         }
 

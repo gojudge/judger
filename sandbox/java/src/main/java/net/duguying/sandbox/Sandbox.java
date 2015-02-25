@@ -54,8 +54,12 @@ public final class Sandbox {
         FutureTask<String> task = null;
         final Timer timer = new Timer(true);
 
+        System.out.printf("[qid] %d\n", runId);
+
         try {
             final Method mainMethod = getMainMethod(runId);
+
+            System.out.printf("[main method] %s\n", mainMethod.toString());
 
             task = new FutureTask<String>(new Callable<String>() {
                 public String call() throws Exception {
@@ -118,31 +122,6 @@ public final class Sandbox {
     }
 
     private static int _outputSize = 0;
-    /**
-     * 	初始化
-     * @param classPath	系统默认classPath路径
-     * 	@param	port		socket服务器监听端口
-     * */
-    private static void inita(String classPath, int port) throws Exception{
-        _classPath = classPath;
-
-        //重新定向输出流
-        System.setOut(new PrintStream(new BufferedOutputStream(_baos) {
-            public void write(byte[] b, int off, int len) throws IOException {
-                _outputSize += len - off;
-                try {
-                    super.write(b, off, len);
-//                    if (_outputSize > ConstantParam.OUTPUT_LIMIT) {
-//                        throw new RuntimeException("Output Limit Exceed" + _outputSize);
-//                    }
-                } catch (IOException e) {
-                    if(e.getMessage().equals("Output Limit Exceed")){
-                        throw e;
-                    }
-                }
-            }
-        }));
-    }
 
     private static SandboxClassLoader _classLoader  = null;
     /**
@@ -152,7 +131,12 @@ public final class Sandbox {
      * */
     private static Method getMainMethod(int runId) throws Exception{
         _classLoader = new SandboxClassLoader(_classPath);
-        Class<?> targetClass = _classLoader.loadClass(_classLoader.getClassPath() + runId, "Main");
+
+        System.out.println("[base path] "+_classLoader.getClassPath() + "q" + runId);
+
+        Class<?> targetClass = _classLoader.loadClass(_classLoader.getClassPath() + "q" + runId, "Main");
+
+        System.out.println("[target class] " + targetClass.toString());
 
         Method mainMethod = null;
         mainMethod = targetClass.getMethod("main", String[].class);
@@ -171,11 +155,8 @@ public final class Sandbox {
      * @param runId 执行id
      * @param timeLimit 时间限制
      * @param memoryLimit 空间限制
-     * @param standardInput 程序标准输入字符串
-     * @param standardOutput 程序标准输出字符串
      * */
-    public static void run(int runId, int timeLimit, int memoryLimit,
-                           String standardInput, String standardOutput) {
+    public static void run(int runId, int timeLimit, int memoryLimit) {
         _timeUsed = 0;
         _memoryUsed = 0;
         _baos.reset();
@@ -224,7 +205,10 @@ public final class Sandbox {
         }
 
         System.out.print("[classpath] " + args[0] + "\n");
-        inita(args[0], Integer.parseInt(args[1]));
+
+        _classPath = args[0];
+        run(12,6000,10240);
+
 
         SecurityManager security = System.getSecurityManager();
         if (security == null) {
