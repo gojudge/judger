@@ -20,6 +20,7 @@ type JClient struct {
 	mark      string
 	debug     bool
 	login     bool
+	sid       string
 }
 
 func New(ip string, port int, password string) (*JClient, error) {
@@ -85,6 +86,13 @@ func (this *JClient) Start(ip string, port int, password string) error {
 	result, ok := response["result"].(bool)
 	if !result || !ok {
 		return errors.New("login failed.")
+	}
+
+	sid, ok := response["sid"].(string)
+	if ok {
+		this.sid = sid
+	} else {
+		this.sid = ""
 	}
 
 	this.login = true
@@ -160,7 +168,7 @@ func (this *JClient) read() (string, error) {
 }
 
 // add task
-func (this *JClient) AddTask(id int64, sid string, language string, code string) (map[string]interface{}, error) {
+func (this *JClient) AddTask(id int64, language string, code string) (map[string]interface{}, error) {
 	if !this.login {
 		return nil, errors.New("login first")
 	}
@@ -168,7 +176,7 @@ func (this *JClient) AddTask(id int64, sid string, language string, code string)
 	req := map[string]interface{}{
 		"action":   "task_add",
 		"id":       id,
-		"sid":      sid,
+		"sid":      this.sid,
 		"time":     time.Now().Nanosecond(),
 		"language": language,
 		"code":     html.EscapeString(code),
@@ -178,14 +186,14 @@ func (this *JClient) AddTask(id int64, sid string, language string, code string)
 }
 
 // get task status
-func (this *JClient) GetStatus(id int64, sid string) (map[string]interface{}, error) {
+func (this *JClient) GetStatus(id int64) (map[string]interface{}, error) {
 	if !this.login {
 		return nil, errors.New("login first")
 	}
 
 	req := map[string]interface{}{
 		"action": "task_info",
-		"sid":    sid,
+		"sid":    this.sid,
 		"id":     id,
 	}
 

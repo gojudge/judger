@@ -13,7 +13,7 @@ func Test_TCP(t *testing.T) {
 		fmt.Println(err)
 	}
 
-	response, err := cli.AddTask(12, "randomstring", "C", "int main(){return 0;}")
+	response, err := cli.AddTask(12, "C", "int main(){return 0;}")
 
 	if err != nil {
 		fmt.Println(err)
@@ -21,7 +21,7 @@ func Test_TCP(t *testing.T) {
 		fmt.Println(response)
 	}
 
-	response, err = cli.GetStatus(12, "randomstring")
+	response, err = cli.GetStatus(12)
 
 	if err != nil {
 		fmt.Println(err)

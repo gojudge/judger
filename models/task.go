@@ -60,7 +60,7 @@ func (this *TaskTab) UpdateTaskInfo(id int, sid string, buildLog string, buildRe
 	var task TaskTab
 
 	task.TaskId = fmt.Sprintf("%s:%d", sid, id)
-	err := o.Read(&task, "TaskTab")
+	err := o.Read(&task, "task")
 
 	task.BuildLog = buildLog
 	task.BuildResult = buildResult
