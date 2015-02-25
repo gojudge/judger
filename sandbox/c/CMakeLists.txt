@@ -4,12 +4,18 @@ set(CMAKE_BUILD_TYPE "Debug")
 include_directories("deps")
 if(UNIX)
 	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS} -g -ggdb")
-	set(SRC_LIST 
-		  src/nix/executer.c
-      src/nix/config.c
-      deps/cJSON.c
-     )
-  set(TEST_LIST
+	#set(SRC_LIST
+	#	src/nix/executer.c
+    #	src/nix/config.c
+    #	deps/cJSON.c
+    #)
+
+    set(
+    	SRC_LIST
+    	src/osx/executer.c
+    )
+
+  	set(TEST_LIST
       src/nix/test.cpp
       )
 elseif(WIN32)
