@@ -29,7 +29,7 @@ echo $? > BUILDRESULT`
 		gccScript = fmt.Sprintf(gccWin, gccWinPath, "gcc", gccWinPath, gccWinPath)
 		gppScript = fmt.Sprintf(gccWin, gccWinPath, "g++", gccWinPath, gccWinPath)
 
-		runWin := `"` + filepath.Join(currentPath, C.Get(runtime.GOOS, "executer_path")) + `" %1 %2 %3`
+		runWin := `"` + filepath.Join(currentPath, C.Get(runtime.GOOS, "executer_path")) + `" -t=%1 -m=%2 %3`
 
 		com.WriteFile(C.Get(runtime.GOOS, "compiler_c"), gccScript)
 		com.WriteFile(C.Get(runtime.GOOS, "compiler_cpp"), gppScript)
@@ -37,7 +37,7 @@ echo $? > BUILDRESULT`
 	} else {
 		gccScript = fmt.Sprintf(gccNix, "gcc")
 		gppScript = fmt.Sprintf(gccNix, "g++")
-		runNix := filepath.Join(currentPath, C.Get(runtime.GOOS, "executer_path")) + ` $1 $2 $3 -c=` + C.Get(runtime.GOOS, "executer_config")
+		runNix := filepath.Join(currentPath, C.Get(runtime.GOOS, "executer_path")) + ` -t=$1 -m=$2 $3 -c=` + C.Get(runtime.GOOS, "executer_config")
 
 		com.WriteFile(C.Get(runtime.GOOS, "compiler_c"), gccScript)
 		com.WriteFile(C.Get(runtime.GOOS, "compiler_cpp"), gppScript)

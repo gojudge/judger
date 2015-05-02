@@ -17,15 +17,15 @@ func RunNativeInSandbox(runScript string, runPath string, time int, mem int) err
 	var err error
 
 	if time > 0 {
-		argTime = fmt.Sprintf("-t=%d", time)
+		argTime = fmt.Sprintf("%d", time)
 	} else {
-		argTime = ""
+		argTime = "10"
 	}
 
 	if mem > 0 {
-		argMem = fmt.Sprintf("-m=%d", mem)
+		argMem = fmt.Sprintf("%d", mem)
 	} else {
-		argMem = ""
+		argMem = "1024"
 	}
 
 	currentPath, _ := os.Getwd()
@@ -38,6 +38,12 @@ func RunNativeInSandbox(runScript string, runPath string, time int, mem int) err
 	}
 
 	runScript = filepath.Join(currentPath, runScript)
+
+	log.Pinkln(runScript,
+		binFilePath,
+		argTime,
+		argMem,
+	)
 
 	if runtime.GOOS == "windows" {
 		err = runnerWin(runScript,
