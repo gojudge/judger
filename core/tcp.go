@@ -3,8 +3,8 @@ package core
 import (
 	"fmt"
 	"github.com/gogather/com"
+	"github.com/gogather/com/log"
 	"io"
-	"log"
 	"net"
 	"os"
 	"regexp"
@@ -37,7 +37,7 @@ func (this *Client) Close() {
 func (this *Client) Write(str string) {
 	str = str + MARK
 	this.Conn.Write([]byte(str))
-	fmt.Println(str)
+	log.Blueln(str)
 }
 
 // set mark for login
@@ -47,10 +47,10 @@ func (this *Client) Login(value bool) {
 }
 
 func Parse(frame string, cli *Client) {
-	fmt.Println(frame)
+	log.Yellowln(frame)
 	json, err := com.JsonDecode(frame)
 	if err != nil {
-		log.Print(err)
+		log.Redln(err)
 	} else {
 		data := json.(map[string]interface{})
 

@@ -96,6 +96,12 @@ func (this *Compile) gcc(id int) error {
 
 	var cmd *exec.Cmd
 
+	log.Pinkln("cmd", "/K",
+		this.compiler_c,
+		this.codeFilePath,
+		this.itemBuildPath,
+	)
+
 	if runtime.GOOS == "windows" {
 		cmd = exec.Command("cmd", "/K",
 			this.compiler_c,
