@@ -19,6 +19,7 @@ func (this *SessionTab) TableName() string {
 // create session and add session into database
 func (this *SessionTab) CreateSession() (string, error) {
 	sid := com.Md5(com.CreateGUID())
+	sid = com.SubString(sid, 0, 7)
 	o := orm.NewOrm()
 	var sess SessionTab
 

@@ -91,9 +91,9 @@ func runnerNix(runScript string, bin string, argTime string, argMem string) erro
 	binPath := filepath.Join(bin)
 	cmd := exec.Command("sh",
 		runScript, // runner script
-		binPath,   // executable name
 		argTime,   // time limit
 		argMem,    // memory limit
+		binPath,   // executable name
 	)
 
 	log.Warnln("[", runScript, binPath, argTime, argMem, "]")
