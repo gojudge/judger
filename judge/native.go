@@ -68,10 +68,10 @@ func RunNativeInSandbox(runScript string, runPath string, time int, mem int) err
 func runnerWin(runScript string, bin string, argTime string, argMem string) error {
 	binPath := filepath.Join(bin)
 	cmd := exec.Command("cmd", "/K",
-		runScript, // runner script
-		binPath,   // executable name
-		argTime,   // time limit
-		argMem,    // memory limit
+		runScript,  // runner script
+		argTime+"", // time limit
+		argMem,     // memory limit
+		binPath,    // executable name
 	)
 
 	log.Warnln("[", runScript, binPath, argTime, argMem, "]")
