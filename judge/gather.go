@@ -40,7 +40,8 @@ func (this *Info) Gather(sid string, id int, buildPath string) map[string]interf
 func (this *Info) getLog(file string) string {
 	path := filepath.Join(this.buildPath, this.sid, fmt.Sprintf("%d", this.id), file)
 	if com.PathExist(path) {
-		return com.ReadFile(path)
+		content, _ := com.ReadFile(path)
+		return content
 	} else {
 		return ""
 	}
@@ -50,7 +51,7 @@ func (this *Info) getLog(file string) string {
 func (this *Info) getResult(file string) int {
 	path := filepath.Join(this.buildPath, this.sid, fmt.Sprintf("%d", this.id), file)
 	if com.PathExist(path) {
-		content := com.ReadFile(path)
+		content, _ := com.ReadFile(path)
 		content = com.Strim(content)
 		if result, err := strconv.Atoi(content); err != nil {
 			log.Warnln(err)
