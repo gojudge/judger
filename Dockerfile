@@ -1,8 +1,8 @@
 FROM google/golang
 MAINTAINER duguying2008@gmail.com
 
-RUN apt-get update
-RUN apt-get upgrade
+RUN apt-get update -y
+RUN apt-get upgrade -y
 RUN apt-get install -y gcc
 RUN apt-get install -y cmake
 
