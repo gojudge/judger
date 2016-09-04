@@ -4,6 +4,7 @@ MAINTAINER duguying2008@gmail.com
 RUN apt-get update -y
 RUN apt-get upgrade -y
 RUN apt-get install -y gcc
+RUN apt-get install -y g++
 RUN apt-get install -y cmake
 
 ADD . /gopath/src/github.com/duguying/judger
