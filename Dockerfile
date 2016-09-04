@@ -16,6 +16,8 @@ RUN make
 
 WORKDIR /gopath/src/github.com/duguying/judger
 RUN git checkout master
+RUN go env
+RUN export GOBIN=$GOPATH/bin
 RUN go get
 RUN go build
 RUN mkdir build
