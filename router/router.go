@@ -1,8 +1,8 @@
 package router
 
 import (
-	"github.com/duguying/judger/controller"
-	"github.com/duguying/judger/core"
+	"github.com/gojudge/judger/controller"
+	"github.com/gojudge/judger/core"
 )
 
 func init() {

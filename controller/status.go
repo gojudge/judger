@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/duguying/judger/core"
 	"github.com/gogather/com"
+	"github.com/gojudge/judger/core"
 	"io"
 	"net/http"
 )

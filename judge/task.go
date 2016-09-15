@@ -4,7 +4,7 @@ import (
 	"errors"
 	// "github.com/gogather/com/log"
 	// "fmt"
-	"github.com/duguying/judger/core"
+	"github.com/gojudge/judger/core"
 	"html"
 	"runtime"
 )

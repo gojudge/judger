@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/duguying/judger/core"
-	"github.com/duguying/judger/judge"
-	"github.com/duguying/judger/models"
 	"github.com/gogather/com"
+	"github.com/gojudge/judger/core"
+	"github.com/gojudge/judger/judge"
+	"github.com/gojudge/judger/models"
 	"io"
 	"net/http"
 	"runtime"

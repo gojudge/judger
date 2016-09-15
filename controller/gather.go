@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/duguying/judger/core"
-	"github.com/duguying/judger/judge"
 	"github.com/gogather/com"
+	"github.com/gojudge/judger/core"
+	"github.com/gojudge/judger/judge"
 	"io"
 	"net/http"
 	"runtime"

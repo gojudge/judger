@@ -2,9 +2,9 @@ package judge
 
 import (
 	"fmt"
-	"github.com/duguying/judger/core"
 	"github.com/gogather/com"
 	"github.com/gogather/com/log"
+	"github.com/gojudge/judger/core"
 	"os"
 	"os/exec"
 	"path/filepath"
