@@ -2,7 +2,7 @@
 
 | windows | linux-travis |
 |---------|--------------|
-| [![appveyor](https://ci.appveyor.com/api/projects/status/s20r7g9jfgxngiik?svg=true)](https://ci.appveyor.com/project/duguying/judger) | [![travis](https://api.travis-ci.org/duguying/judger.png)](https://travis-ci.org/duguying/judger) |
+| [![Build status](https://ci.appveyor.com/api/projects/status/4n48mdcqoss6nhsm?svg=true)](https://ci.appveyor.com/project/duguying/judger-5bddq) | [![Build Status](https://travis-ci.org/gojudge/judger.svg?branch=master)](https://travis-ci.org/gojudge/judger) |
 
 the judger server of online judge system
 
