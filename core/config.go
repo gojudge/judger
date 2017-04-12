@@ -1,14 +1,13 @@
 package core
 
 import (
-	// "encoding/json"
 	"fmt"
 	"github.com/Unknwon/goconfig"
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
 	"io/ioutil"
 	"os"
 	"regexp"
+	"log"
 )
 
 type Config struct {
