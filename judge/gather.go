@@ -3,7 +3,7 @@ package judge
 import (
 	"fmt"
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
+	"log"
 	"path/filepath"
 	"strconv"
 )
@@ -54,7 +54,7 @@ func (this *Info) getResult(file string) int {
 		content, _ := com.ReadFile(path)
 		content = com.Strim(content)
 		if result, err := strconv.Atoi(content); err != nil {
-			log.Warnln(err)
+			log.Println(err)
 			return -1
 		} else {
 			return result

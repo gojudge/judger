@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
 	"html"
 	"io"
+	"log"
 	"net"
 	"regexp"
 	"time"
@@ -52,7 +52,7 @@ func (this *JClient) Start(ip string, port int, password string) error {
 			conn.Close()
 		}
 
-		log.Warnln("connect judge server failed in port:", port)
+		log.Println("connect judge server failed in port:", port)
 
 		return err
 	} else {
@@ -69,7 +69,7 @@ func (this *JClient) Start(ip string, port int, password string) error {
 			this.mark = com.SubString(arr[0], 1, 1)
 		}
 
-		log.Blueln(content)
+		log.Println(content)
 	}
 
 	// login
@@ -109,13 +109,13 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 	}
 
 	if this.conn == nil {
-		log.Warnln("Connection Not Exist")
+		log.Println("Connection Not Exist")
 		return nil, errors.New("Connection Not Exist")
 	}
 
 	_, err = this.conn.Write([]byte(msgStr + this.mark))
 	if err != nil {
-		log.Warnln("[Write Error]", err)
+		log.Println("[Write Error]", err)
 		this.conn.Close()
 		return nil, err
 	}
@@ -131,8 +131,8 @@ func (this *JClient) Request(msg map[string]interface{}) (map[string]interface{}
 	content = reg.ReplaceAllString(content, "")
 
 	if this.debug {
-		log.Bluef("[judger/send:%s]\n%s\n", time.Now(), msgStr)
-		log.Warnf("[judger/recv:%s]\n%s\n", time.Now(), content)
+		log.Println("[judger/send:%s]\n%s\n", time.Now(), msgStr)
+		log.Println("[judger/recv:%s]\n%s\n", time.Now(), content)
 	}
 
 	resp, err := com.JsonDecode(content)

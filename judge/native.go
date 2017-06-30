@@ -2,7 +2,7 @@ package judge
 
 import (
 	"fmt"
-	"github.com/gogather/com/log"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,7 +39,7 @@ func RunNativeInSandbox(runScript string, runPath string, time int, mem int) err
 
 	runScript = filepath.Join(currentPath, runScript)
 
-	log.Pinkln(runScript,
+	log.Println(runScript,
 		binFilePath,
 		argTime,
 		argMem,
@@ -74,7 +74,7 @@ func runnerWin(runScript string, bin string, argTime string, argMem string) erro
 		binPath,    // executable name
 	)
 
-	log.Warnln("[", runScript, binPath, argTime, argMem, "]")
+	log.Println("[", runScript, binPath, argTime, argMem, "]")
 
 	_, err := cmd.Output()
 	if err != nil {
@@ -96,7 +96,7 @@ func runnerNix(runScript string, bin string, argTime string, argMem string) erro
 		binPath,   // executable name
 	)
 
-	log.Warnln("[", runScript, binPath, argTime, argMem, "]")
+	log.Println("[", runScript, binPath, argTime, argMem, "]")
 
 	_, err := cmd.Output()
 	if err != nil {

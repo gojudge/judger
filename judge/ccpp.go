@@ -3,8 +3,8 @@ package judge
 import (
 	"fmt"
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
 	"github.com/gojudge/judger/core"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,21 +42,21 @@ func (this *Compile) NewCompile() {
 	this.buildPath = filepath.Join(this.currentPath, core.C.Get(runtime.GOOS, "buildpath"))
 	this.compiler_c = filepath.Join(this.currentPath, core.C.Get(runtime.GOOS, "compiler_c"))
 
-	log.Blueln("[current path]", this.currentPath)
-	log.Blueln("[build path]", this.buildPath)
-	log.Blueln("[compiler path]", this.compiler_c)
+	log.Println("[current path]", this.currentPath)
+	log.Println("[build path]", this.buildPath)
+	log.Println("[compiler path]", this.compiler_c)
 }
 
 func (this *Compile) Run(code string, language string, id int, sid string) (string, error) {
 
 	err := this.createDirs(id, sid)
 	if err != nil {
-		log.Warnln(err)
+		log.Println(err)
 		return "", err
 	} else {
 		err = this.writeCode(code, id, language)
 		if err != nil {
-			log.Warnln(err)
+			log.Println(err)
 			return "", err
 		}
 	}
@@ -96,7 +96,7 @@ func (this *Compile) gcc(id int) error {
 
 	var cmd *exec.Cmd
 
-	log.Pinkln("cmd", "/K",
+	log.Println("cmd", "/K",
 		this.compiler_c,
 		this.codeFilePath,
 		this.itemBuildPath,
@@ -118,8 +118,8 @@ func (this *Compile) gcc(id int) error {
 
 	err := cmd.Start()
 	if err != nil {
-		log.Warnln("Start Failed")
-		log.Warnln(err)
+		log.Println("Start Failed")
+		log.Println(err)
 	}
 
 	stn := time.Now()
@@ -131,8 +131,8 @@ func (this *Compile) gcc(id int) error {
 	BuildProcessHaveExit = true
 
 	if err != nil {
-		log.Warnln("Wait Failed")
-		log.Warnln(err)
+		log.Println("Wait Failed")
+		log.Println(err)
 	}
 
 	os.Chdir(this.currentPath)
@@ -144,7 +144,7 @@ func checkTimer(cmd *exec.Cmd, comp *Compile, id int) {
 	for {
 		// if building process hava exit normally, exit timer
 		if BuildProcessHaveExit {
-			log.Blueln("Building Process Exit Normally.")
+			log.Println("Building Process Exit Normally.")
 			return
 		}
 
@@ -153,7 +153,7 @@ func checkTimer(cmd *exec.Cmd, comp *Compile, id int) {
 		// over 10s
 		if now-BuildStartTime > 10*1000000000 {
 			comp.buildOverTime = true
-			log.Warnln("Building Out of Time, Terminated!")
+			log.Println("Building Out of Time, Terminated!")
 			cmd.Process.Kill()
 
 			systemTag := com.SubString(runtime.GOOS, 0, 5)
@@ -166,7 +166,7 @@ func checkTimer(cmd *exec.Cmd, comp *Compile, id int) {
 				)
 				err := cleanCmd.Run()
 				if err != nil {
-					log.Warnln("clean orphan failed")
+					log.Println("clean orphan failed")
 				}
 			}
 			return

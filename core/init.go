@@ -2,7 +2,7 @@ package core
 
 import (
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -20,13 +20,13 @@ func Judger() {
 	dataPath := "data.db"
 
 	if Mode == "docker" {
-		log.Blueln("[mode]", "docker")
+		log.Println("[mode]", "docker")
 
 		if !com.FileExist("/data") {
 			if err := com.Mkdir("/data"); err != nil {
-				log.Warnln("[Warn]", "create dir /data failed")
+				log.Println("[Warn]", "create dir /data failed")
 			} else {
-				log.Blueln("[info]", "create dir /data")
+				log.Println("[info]", "create dir /data")
 			}
 		}
 
@@ -46,20 +46,20 @@ func Judger() {
 	}
 
 	if !com.FileExist(configFile) {
-		log.Dangerln("[Error]", configFile, "does not exist!")
+		log.Println("[Error]", configFile, "does not exist!")
 		os.Exit(-1)
 	}
 
-	log.Blueln("[config]")
-	log.Blueln(configFile)
+	log.Println("[config]")
+	log.Println(configFile)
 
 	C = &Config{}
 	C.NewConfig(configFile)
 
 	GenScript()
 
-	log.Blueln("[data]")
-	log.Blueln(dataPath)
+	log.Println("[data]")
+	log.Println(dataPath)
 	DB = &Sqlite{}
 	DB.NewSqlite(dataPath)
 

@@ -2,7 +2,6 @@ package judge
 
 import (
 	"errors"
-	// "github.com/gogather/com/log"
 	// "fmt"
 	"github.com/gojudge/judger/core"
 	"html"

@@ -2,8 +2,8 @@ package core
 
 import (
 	"github.com/gogather/com"
-	"github.com/gogather/com/log"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -13,9 +13,9 @@ func HttpStart() {
 
 	err := http.ListenAndServe(":1005", nil)
 	if err != nil {
-		log.Warnln("ListenAndServe: ", err)
+		log.Println("ListenAndServe: ", err)
 	} else {
-		log.Blueln("Http Server Started!")
+		log.Println("Http Server Started!")
 	}
 }
 
@@ -26,12 +26,12 @@ func HandleJsonRpc(w http.ResponseWriter, r *http.Request) {
 
 	content := string(p)
 
-	log.Blueln(content)
+	log.Println(content)
 
 	json, err := com.JsonDecode(content)
 
 	if err != nil {
-		log.Warnln("not json-rpc format")
+		log.Println("not json-rpc format")
 		return
 	}
 
@@ -63,7 +63,7 @@ func HandleJsonRpc(w http.ResponseWriter, r *http.Request) {
 	// trigger controller
 	ctrl, exists := RouterMap[data["action"].(string)]
 	if !exists {
-		log.Warnln("not exist")
+		log.Println("not exist")
 		return
 	}
 	ctrl.Http(data, w, r)
