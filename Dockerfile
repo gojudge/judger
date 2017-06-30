@@ -3,24 +3,16 @@ MAINTAINER duguying2008@gmail.com
 
 RUN apt-get update -y
 RUN apt-get upgrade -y
-RUN apt-get install -y gcc
-RUN apt-get install -y g++
-RUN apt-get install -y cmake
+RUN go env
 
-ADD . /gopath/src/github.com/duguying/judger
+ADD . /go/src/github.com/gojudge/judger
 
 # set the working directory and add current stuff
-WORKDIR /gopath/src/github.com/duguying/judger/sandbox/c/build
-RUN cmake ..
-RUN make
-
-WORKDIR /gopath/src/github.com/duguying/judger
-RUN git checkout master
-RUN go env
+WORKDIR /go/src/github.com/gojudge/judger
+# RUN git checkout master
 RUN export GOBIN=$GOPATH/bin
 RUN go get
 RUN go build
-RUN mkdir build
 
 EXPOSE 1004 1005
 ENTRYPOINT []
