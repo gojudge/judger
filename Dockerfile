@@ -9,7 +9,6 @@ ADD . /go/src/github.com/gojudge/judger
 
 # set the working directory and add current stuff
 WORKDIR /go/src/github.com/gojudge/judger
-# RUN git checkout master
 RUN export GOBIN=$GOPATH/bin
 RUN go get
 RUN go build
