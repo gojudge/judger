@@ -2,8 +2,8 @@ package core
 
 import (
 	"github.com/astaxie/beego/orm"
-	"github.com/gogather/com/log"
 	_ "github.com/mattn/go-sqlite3"
+	"log"
 )
 
 type Sqlite struct {
@@ -41,12 +41,12 @@ func (this *Sqlite) createTable() {
 
 	_, err := o.Raw(table1).Exec()
 	if err != nil {
-		log.Blueln(err)
+		log.Println(err)
 	}
 
 	_, err = o.Raw(table2).Exec()
 	if err != nil {
-		log.Blueln(err)
+		log.Println(err)
 	}
 
 }
